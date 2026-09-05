@@ -667,7 +667,7 @@ export default function AdminPage() {
                             <MessageSquare className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                             <div>
                               <span className="text-[10px] font-bold text-amber-400/80 uppercase block">
-                                Minh chứng tu luyện:
+                                Minh chứng tu luyện (Gửi qua Facebook):
                               </span>
                               <p className="mt-0.5 italic text-slate-200">{sub.note}</p>
                             </div>

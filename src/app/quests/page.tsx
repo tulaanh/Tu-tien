@@ -352,7 +352,7 @@ export default function QuestsPage() {
             </div>
 
             {/* Quest Preview */}
-            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 mb-4">
+            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 mb-3">
               <h4 className="font-bold text-slate-200 text-sm">{selectedQuest.title}</h4>
               <p className="text-xs text-slate-400 mt-1">{selectedQuest.description}</p>
               <div className="flex items-center space-x-3 text-xs mt-2.5 pt-2 border-t border-slate-800 font-semibold">
@@ -361,14 +361,22 @@ export default function QuestsPage() {
               </div>
             </div>
 
+            {/* Facebook Proof Notice Box */}
+            <div className="p-3 rounded-xl bg-blue-950/50 border border-blue-500/40 text-blue-200 text-xs flex items-start space-x-2.5 mb-3.5 shadow-sm">
+              <span className="text-base shrink-0">📲</span>
+              <p className="leading-relaxed">
+                <strong className="text-blue-300">Yêu cầu minh chứng:</strong> Đạo hữu vui lòng <strong>gửi ảnh / video minh chứng qua tin nhắn Facebook</strong> cho Trưởng Lão để được thẩm định và phê chuẩn!
+              </p>
+            </div>
+
             <form onSubmit={handleSubmitReport} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Ghi chú / Minh chứng tu luyện (Tùy chọn)
+                  Ghi chú báo cáo (Gửi minh chứng qua Facebook)
                 </label>
                 <textarea
-                  rows={3}
-                  placeholder="Ví dụ: Đã hoàn thành 30 phút chạy bộ sáng nay / Đã chụp ảnh em gái mặc đồng phục..."
+                  rows={2}
+                  placeholder="Ví dụ: Đã gửi ảnh / video minh chứng qua Facebook cho Trưởng Lão..."
                   value={reportNote}
                   onChange={(e) => setReportNote(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
