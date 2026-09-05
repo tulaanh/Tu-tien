@@ -356,7 +356,7 @@ export default function Navbar() {
                     ? "Đang kết nối..."
                     : authTab === "login"
                     ? "Đăng Nhập"
-                    : "Đăng Ký Ngay (+50 💎)"}
+                    : "Đăng Ký Đạo Hiệu"}
                 </button>
               </div>
             </form>

@@ -545,7 +545,7 @@ export default function HomePage() {
                     ? "Đang kết nối..."
                     : homeAuthTab === "login"
                     ? "Tiến Vào Động Phủ"
-                    : "Khai Mở Tiên Lộ (+50 💎 Tân Thủ)"}
+                    : "Khai Mở Tiên Lộ"}
                 </button>
               </form>
             </div>
