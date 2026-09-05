@@ -85,7 +85,7 @@ export async function POST(request: Request) {
         description: description.trim(),
         category: category || "DAILY",
         expReward: Number(expReward) || 30,
-        stoneReward: Number(stoneReward) || 15,
+        stoneReward: Number(stoneReward) || 8,
         difficulty: difficulty || "Trung bình",
         minRealmLevel: Number(minRealmLevel) || 0,
         icon: category === "BREAKTHROUGH" ? "zap" : category === "CHALLENGE" ? "sword" : "scroll",

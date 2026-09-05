@@ -34,7 +34,7 @@ model Quest {
   category      String   @default("DAILY") // DAILY, CHALLENGE, BREAKTHROUGH
   minRealmLevel Int      @default(0)
   expReward     Int      @default(20)
-  stoneReward   Int      @default(10)
+  stoneReward   Int      @default(5)
   difficulty    String   @default("Dễ")
   icon          String   @default("scroll")
   isArchived    Boolean  @default(false)
