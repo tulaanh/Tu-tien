@@ -8,8 +8,8 @@
 ## ✨ Tính Năng Nổi Bật
 
 - ⛩️ **Hệ Thống Cảnh Giới Tiên Hiệp**:
-  - 18 cấp bậc cảnh giới chuẩn mực: *Phàm Nhân $\rightarrow$ Luyện Khí (9 Tầng) $\rightarrow$ Trúc Cơ $\rightarrow$ Kim Đan $\rightarrow$ Nguyên Anh $\rightarrow$ Hóa Thần...*
-  - Cơ chế **Bình Cảnh (Bottleneck)** khi đạt 100% Tu Vi $\rightarrow$ Kích hoạt thử thách **Đột Phá Thiên Kiếp** với hiệu ứng pháo hoa mãn nhãn!
+  - 18 cấp bậc cảnh giới chuẩn mực: *Phàm Nhân → Luyện Khí (9 Tầng) → Trúc Cơ → Kim Đan → Nguyên Anh → Hóa Thần...*
+  - Cơ chế **Bình Cảnh (Bottleneck)** khi đạt 100% Tu Vi → Kích hoạt thử thách **Đột Phá Thiên Kiếp** với hiệu ứng pháo hoa mãn nhãn!
 - 📜 **Nhiệm Vụ Đường (Quest Board)**:
   - **Nhật Thường (Daily)**: Reset mỗi ngày (Dậy sớm, luyện thể, đọc sách, dọn dẹp động phủ...).
   - **Thử Thách (Challenge)**: Dứt điểm các dự án và deadline khó nhằn.
@@ -23,7 +23,7 @@
   - Dành riêng cho Chưởng Môn (Admin) quản lý: Tạo/Sửa/Xóa nhiệm vụ & phần thưởng, duyệt lịch sử đổi quà ngoài đời thực.
 - 📱 **Tối Ưu Toàn Diện Mobile (PWA / Mobile-First)**:
   - Thanh điều hướng cố định ở đáy màn hình (Bottom Navigation Bar) chuẩn app di động native.
-  - Chuẩn thao tác chạm cảm ứng công thái học ($\ge 44px$).
+  - Chuẩn thao tác chạm cảm ứng công thái học (≥ 44px).
 
 ---
 
@@ -70,15 +70,14 @@
 
 ---
 
-## 🌐 Triển Khai Lên Mạng (Deployment)
+## 🌐 Hướng Dẫn Triển Khai Lên Mạng Miễn Phí (Deploy lên Vercel)
 
-### Cách 1: Triển khai 1-click lên Vercel
-1. Đẩy code lên GitHub repository `Tu-tien`.
-2. Truy cập [vercel.com](https://vercel.com) $\rightarrow$ **Add New Project** $\rightarrow$ Chọn repo **`Tu-tien`**.
-3. Bấm **Deploy**.
-
-### Cách 2: Triển khai lên Render / Railway / VPS
-Ứng dụng sử dụng SQLite cục bộ, khi chạy trên Docker / VPS / Render Web Service, dữ liệu sẽ được lưu trữ liên tục và bền bỉ trong volume mount.
+1. Truy cập [vercel.com/new](https://vercel.com/new) và đăng nhập bằng tài khoản GitHub của bạn.
+2. Chọn repository **`Tu-tien`** và bấm **Import**.
+3. Tại phần Cấu hình:
+   - **Framework Preset**: Next.js (mặc định)
+   - Bấm **Deploy**.
+4. Sau 1 phút, Vercel sẽ cung cấp đường link website trực tiếp để bạn truy cập từ điện thoại hoặc chia sẻ cho mọi người!
 
 ---
 
