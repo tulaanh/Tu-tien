@@ -227,12 +227,15 @@ export default function AdminPage() {
     if (!confirm("Đạo hữu có chắc muốn xóa nhiệm vụ này khỏi tông môn?")) return;
     try {
       const res = await fetch(`/api/quests?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
       if (res.ok) {
-        setToast({ type: "success", message: "Đã xóa nhiệm vụ" });
+        setToast({ type: "success", message: data.message || "Đã xóa nhiệm vụ thành công" });
         fetchAdminData();
+      } else {
+        setToast({ type: "error", message: data.error || "Lỗi khi xóa nhiệm vụ" });
       }
     } catch (e) {
-      setToast({ type: "error", message: "Lỗi khi xóa nhiệm vụ" });
+      setToast({ type: "error", message: "Lỗi kết nối khi xóa nhiệm vụ" });
     }
   };
 
@@ -290,12 +293,15 @@ export default function AdminPage() {
     if (!confirm("Đạo hữu có chắc muốn gỡ vật phẩm này khỏi Tàng Bảo Các?")) return;
     try {
       const res = await fetch(`/api/rewards?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
       if (res.ok) {
-        setToast({ type: "success", message: "Đã gỡ bỏ vật phẩm" });
+        setToast({ type: "success", message: data.message || "Đã gỡ bỏ vật phẩm thành công" });
         fetchAdminData();
+      } else {
+        setToast({ type: "error", message: data.error || "Lỗi khi xóa vật phẩm" });
       }
     } catch (e) {
-      setToast({ type: "error", message: "Lỗi khi xóa vật phẩm" });
+      setToast({ type: "error", message: "Lỗi kết nối khi xóa vật phẩm" });
     }
   };
 

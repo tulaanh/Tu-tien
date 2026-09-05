@@ -50,11 +50,11 @@ export async function GET(request: Request) {
   }
 }
 
-// Đăng nhập hoặc Tạo Đạo Hiệu mới
+// Đăng nhập hoặc Đăng ký Đạo Hiệu mới
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, pin } = body;
+    const { name, pin, action, avatar, bio } = body;
 
     if (!name || !name.trim() || !pin) {
       return NextResponse.json(
@@ -64,40 +64,106 @@ export async function POST(request: Request) {
     }
 
     const cleanName = name.trim();
+    const cleanPin = String(pin).trim();
     let cultivator = await prisma.cultivator.findUnique({
       where: { name: cleanName },
     });
 
+    // 1. Chế độ Đăng ký (Register)
+    if (action === "register") {
+      if (cultivator) {
+        return NextResponse.json(
+          { error: `Đạo hiệu "${cleanName}" đã có người đăng ký! Vui lòng chọn Đạo hiệu khác hoặc chuyển sang tab Đăng Nhập.` },
+          { status: 400 }
+        );
+      }
+
+      if (cleanPin.length < 4) {
+        return NextResponse.json(
+          { error: "Mã PIN phải có ít nhất 4 ký tự/chữ số để bảo vệ động phủ!" },
+          { status: 400 }
+        );
+      }
+
+      const initialRealm = getRealmByLevel(0);
+      cultivator = await prisma.cultivator.create({
+        data: {
+          name: cleanName,
+          pin: cleanPin,
+          realm: initialRealm.name,
+          realmLevel: 0,
+          currentExp: 0,
+          maxExp: initialRealm.maxExp,
+          spiritStones: 50, // Tặng 50 linh thạch tân thủ
+          avatar: avatar || "sword",
+          bio: bio || "Phàm thai nhập đạo, nghịch thiên cải mệnh.",
+        },
+      });
+
+      const realmInfo = getRealmByLevel(cultivator.realmLevel);
+      return NextResponse.json({
+        message: "Chúc mừng đạo hữu đã khai mở tiên lộ thành công!",
+        cultivator: {
+          ...cultivator,
+          realmInfo,
+        },
+      });
+    }
+
+    // 2. Chế độ Đăng nhập (Login)
+    if (action === "login") {
+      if (!cultivator) {
+        return NextResponse.json(
+          { error: `Đạo hiệu "${cleanName}" chưa từng xuất hiện tại Vấn Đạo Các. Vui lòng chuyển sang tab "Đăng Ký" để tạo tài khoản mới!` },
+          { status: 404 }
+        );
+      }
+
+      if (cultivator.pin !== cleanPin) {
+        return NextResponse.json(
+          { error: "Mã PIN không chính xác! Không thể xâm nhập động phủ của đạo hữu khác." },
+          { status: 401 }
+        );
+      }
+
+      const realmInfo = getRealmByLevel(cultivator.realmLevel);
+      return NextResponse.json({
+        message: `Chào mừng Đạo hữu ${cultivator.name} trở lại động phủ!`,
+        cultivator: {
+          ...cultivator,
+          realmInfo,
+        },
+      });
+    }
+
+    // 3. Chế độ tự động / Fallback tương thích
     if (cultivator) {
-      // Kiểm tra PIN
-      if (cultivator.pin !== pin.trim()) {
+      if (cultivator.pin !== cleanPin) {
         return NextResponse.json(
           { error: "Mã PIN không chính xác! Không thể xâm nhập động phủ của đạo hữu khác." },
           { status: 401 }
         );
       }
     } else {
-      // Tạo Đạo Hữu mới khởi đầu từ Phàm Nhân
       const initialRealm = getRealmByLevel(0);
       cultivator = await prisma.cultivator.create({
         data: {
           name: cleanName,
-          pin: pin.trim(),
+          pin: cleanPin,
           realm: initialRealm.name,
           realmLevel: 0,
           currentExp: 0,
           maxExp: initialRealm.maxExp,
-          spiritStones: 20, // Tặng 20 linh thạch tân thủ
-          avatar: "sword",
-          bio: "Phàm thai nhập đạo, nghịch thiên cải mệnh.",
+          spiritStones: 20,
+          avatar: avatar || "sword",
+          bio: bio || "Phàm thai nhập đạo, nghịch thiên cải mệnh.",
         },
       });
     }
 
     const realmInfo = getRealmByLevel(cultivator.realmLevel);
-
     return NextResponse.json({
-      message: cultivator ? "Tiến vào động phủ thành công!" : "Khởi tạo đạo lộ thành công!",
+      message: "Tiến vào động phủ thành công!",
       cultivator: {
         ...cultivator,
         realmInfo,

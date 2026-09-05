@@ -19,25 +19,47 @@ import {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { cultivator, logout, login } = useCultivator();
+  const { cultivator, logout, login, register } = useCultivator();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [authName, setAuthName] = useState("");
   const [authPin, setAuthPin] = useState("");
+  const [authPinConfirm, setAuthPinConfirm] = useState("");
+  const [authAvatar, setAuthAvatar] = useState("sword");
   const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
+
+    if (authTab === "register") {
+      if (authPin.trim().length < 4) {
+        setAuthError("Mã PIN phải có ít nhất 4 chữ số");
+        return;
+      }
+      if (authPin !== authPinConfirm) {
+        setAuthError("Mã PIN xác nhận không trùng khớp!");
+        return;
+      }
+    }
+
     setAuthSubmitting(true);
-    const res = await login(authName, authPin);
+    let res;
+    if (authTab === "login") {
+      res = await login(authName, authPin);
+    } else {
+      res = await register(authName, authPin, authAvatar);
+    }
     setAuthSubmitting(false);
+
     if (res.success) {
       setShowAuthModal(false);
       setAuthName("");
       setAuthPin("");
+      setAuthPinConfirm("");
     } else {
-      setAuthError(res.message || "Đăng nhập thất bại");
+      setAuthError(res.message || (authTab === "login" ? "Đăng nhập thất bại" : "Đăng ký thất bại"));
     }
   };
 
@@ -179,16 +201,50 @@ export default function Navbar() {
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
           <div className="relative w-full max-w-sm sm:max-w-md p-5 sm:p-6 rounded-2xl bg-[#0e1622] border border-amber-500/30 shadow-2xl">
-            <div className="text-center mb-4 sm:mb-5">
+            <div className="text-center mb-4">
               <div className="w-11 h-11 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
                 <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-amber-300">
-                Khai Mở Tiên Duyên
+                {authTab === "login" ? "Tiến Vào Động Phủ" : "Khai Mở Tiên Duyên"}
               </h3>
               <p className="text-[11px] sm:text-xs text-slate-400 mt-1">
-                Nhập Đạo Hiệu và Mã PIN để tiến vào Động Phủ. Nếu chưa có, hệ thống sẽ tự tạo hồ sơ mới!
+                {authTab === "login"
+                  ? "Nhập Đạo Hiệu và Mã PIN để tiếp tục hành trình tu đạo."
+                  : "Đăng ký Đạo Hiệu mới để bắt đầu tích lũy tu vi từ con số 0."}
               </p>
+            </div>
+
+            {/* Switch Tabs: Đăng Nhập vs Đăng Ký */}
+            <div className="flex rounded-xl bg-slate-900/90 p-1 border border-slate-800 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthTab("login");
+                  setAuthError("");
+                }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  authTab === "login"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Đăng Nhập
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthTab("register");
+                  setAuthError("");
+                }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  authTab === "register"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Tạo Đạo Hiệu Mới
+              </button>
             </div>
 
             {authError && (
@@ -207,7 +263,7 @@ export default function Navbar() {
                   <input
                     type="text"
                     required
-                    placeholder="Hàn Lập, Tiêu Viêm..."
+                    placeholder="Ví dụ: Hàn Lập, Bạch Tiểu Thuần, Tuấn..."
                     value={authName}
                     onChange={(e) => setAuthName(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
@@ -215,9 +271,39 @@ export default function Navbar() {
                 </div>
               </div>
 
+              {authTab === "register" && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Xuất Thân Tu Hành
+                  </label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { id: "sword", label: "Kiếm Tu", icon: "🗡️" },
+                      { id: "pill", label: "Đan Tu", icon: "🧪" },
+                      { id: "scroll", label: "Phù Sư", icon: "📜" },
+                      { id: "shield", label: "Thể Tu", icon: "🥋" },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setAuthAvatar(item.id)}
+                        className={`p-2 rounded-xl border text-center transition flex flex-col items-center justify-center ${
+                          authAvatar === item.id
+                            ? "border-amber-500 bg-amber-500/20 text-amber-300 shadow-md"
+                            : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700"
+                        }`}
+                      >
+                        <span className="text-base mb-0.5">{item.icon}</span>
+                        <span className="text-[10px] font-semibold">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Mã PIN Bảo Mật (4 - 6 số)
+                  {authTab === "register" ? "Đặt Mã PIN Bảo Mật (4 - 6 số)" : "Mã PIN Bảo Mật"}
                 </label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
@@ -225,7 +311,7 @@ export default function Navbar() {
                     type="password"
                     required
                     inputMode="numeric"
-                    placeholder="1234"
+                    placeholder="Ví dụ: 1234"
                     value={authPin}
                     onChange={(e) => setAuthPin(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
@@ -233,20 +319,44 @@ export default function Navbar() {
                 </div>
               </div>
 
+              {authTab === "register" && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Xác Nhận Lại Mã PIN
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+                    <input
+                      type="password"
+                      required
+                      inputMode="numeric"
+                      placeholder="Nhập lại mã PIN trên"
+                      value={authPinConfirm}
+                      onChange={(e) => setAuthPinConfirm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex space-x-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAuthModal(false)}
                   className="flex-1 py-2.5 px-3 rounded-xl text-xs font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 active:scale-95 transition"
                 >
-                  Tạm Huỷ
+                  Đóng
                 </button>
                 <button
                   type="submit"
                   disabled={authSubmitting}
                   className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 hover:from-amber-400 hover:to-yellow-500 shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50 transition"
                 >
-                  {authSubmitting ? "Đang kết nối..." : "Bắt Đầu"}
+                  {authSubmitting
+                    ? "Đang kết nối..."
+                    : authTab === "login"
+                    ? "Đăng Nhập"
+                    : "Đăng Ký Ngay (+50 💎)"}
                 </button>
               </div>
             </form>

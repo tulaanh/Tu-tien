@@ -23,6 +23,7 @@ interface CultivatorContextType {
   cultivator: CultivatorData | null;
   loading: boolean;
   login: (name: string, pin: string) => Promise<{ success: boolean; message?: string }>;
+  register: (name: string, pin: string, avatar?: string, bio?: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   refresh: () => Promise<void>;
   breakthrough: () => Promise<{ success: boolean; message?: string }>;
@@ -32,6 +33,7 @@ const CultivatorContext = createContext<CultivatorContextType>({
   cultivator: null,
   loading: true,
   login: async () => ({ success: false }),
+  register: async () => ({ success: false }),
   logout: () => {},
   refresh: async () => {},
   breakthrough: async () => ({ success: false }),
@@ -75,11 +77,31 @@ export const CultivatorProvider = ({ children }: { children: React.ReactNode }) 
       const res = await fetch("/api/cultivator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, pin }),
+        body: JSON.stringify({ name, pin, action: "login" }),
       });
       const data = await res.json();
       if (!res.ok) {
         return { success: false, message: data.error || "Đăng nhập thất bại" };
+      }
+
+      setCultivator(data.cultivator);
+      localStorage.setItem("tien_gioi_cultivator_id", data.cultivator.id);
+      return { success: true, message: data.message };
+    } catch (e) {
+      return { success: false, message: "Lỗi kết nối mạng" };
+    }
+  };
+
+  const register = async (name: string, pin: string, avatar: string = "sword", bio?: string) => {
+    try {
+      const res = await fetch("/api/cultivator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, pin, action: "register", avatar, bio }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.error || "Đăng ký thất bại" };
       }
 
       setCultivator(data.cultivator);
@@ -138,6 +160,7 @@ export const CultivatorProvider = ({ children }: { children: React.ReactNode }) 
         cultivator,
         loading,
         login,
+        register,
         logout,
         refresh,
         breakthrough,

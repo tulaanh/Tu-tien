@@ -120,6 +120,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Thiếu ID nhiệm vụ" }, { status: 400 });
     }
 
+    // Xóa các lần hoàn thành nhiệm vụ này trước để tránh lỗi ràng buộc khóa ngoại
+    await prisma.questCompletion.deleteMany({
+      where: { questId: id },
+    });
+
     await prisma.quest.delete({
       where: { id },
     });
@@ -127,6 +132,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: "Đã hủy bỏ nhiệm vụ thành công" });
   } catch (error) {
     console.error("Lỗi xóa quest:", error);
-    return NextResponse.json({ error: "Không thể xóa nhiệm vụ" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Không thể xóa nhiệm vụ: " + (error instanceof Error ? error.message : "Lỗi máy chủ") },
+      { status: 500 }
+    );
   }
 }

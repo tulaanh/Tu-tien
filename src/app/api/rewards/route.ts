@@ -85,6 +85,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Thiếu ID vật phẩm" }, { status: 400 });
     }
 
+    // Xóa các lịch sử đổi thưởng liên quan trước
+    await prisma.redemption.deleteMany({
+      where: { rewardId: id },
+    });
+
     await prisma.reward.delete({
       where: { id },
     });
@@ -92,6 +97,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: "Đã gỡ vật phẩm khỏi Tàng Bảo Các" });
   } catch (error) {
     console.error("Lỗi xóa reward:", error);
-    return NextResponse.json({ error: "Không thể xóa vật phẩm" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Không thể xóa vật phẩm: " + (error instanceof Error ? error.message : "Lỗi máy chủ") },
+      { status: 500 }
+    );
   }
 }

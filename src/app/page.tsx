@@ -42,9 +42,12 @@ interface RewardItem {
 }
 
 export default function HomePage() {
-  const { cultivator, loading, login, refresh } = useCultivator();
+  const { cultivator, loading, login, register, refresh } = useCultivator();
+  const [homeAuthTab, setHomeAuthTab] = useState<"login" | "register">("login");
   const [guestName, setGuestName] = useState("");
   const [guestPin, setGuestPin] = useState("");
+  const [guestPinConfirm, setGuestPinConfirm] = useState("");
+  const [guestAvatar, setGuestAvatar] = useState("sword");
   const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -87,11 +90,29 @@ export default function HomePage() {
   const handleQuickLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
+
+    if (homeAuthTab === "register") {
+      if (guestPin.trim().length < 4) {
+        setLoginError("Mã PIN phải có ít nhất 4 chữ số");
+        return;
+      }
+      if (guestPin !== guestPinConfirm) {
+        setLoginError("Mã PIN xác nhận không trùng khớp!");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
-    const res = await login(guestName, guestPin);
+    let res;
+    if (homeAuthTab === "login") {
+      res = await login(guestName, guestPin);
+    } else {
+      res = await register(guestName, guestPin, guestAvatar);
+    }
     setIsSubmitting(false);
+
     if (!res.success) {
-      setLoginError(res.message || "Đăng nhập thất bại");
+      setLoginError(res.message || (homeAuthTab === "login" ? "Đăng nhập thất bại" : "Đăng ký thất bại"));
     }
   };
 
@@ -379,10 +400,44 @@ export default function HomePage() {
 
             {/* Quick Registration / Login Card */}
             <div className="mt-10 max-w-md mx-auto p-6 rounded-2xl bg-slate-900/90 border border-amber-500/30 shadow-xl text-left">
-              <h3 className="text-base font-bold text-amber-300 flex items-center gap-2 mb-3">
-                <UserPlus className="w-4 h-4" />
-                <span>Tiến Vào Động Phủ (Nhập Đạo Hiệu)</span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-amber-300 flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  <span>{homeAuthTab === "login" ? "Tiến Vào Động Phủ" : "Khai Mở Tiên Duyên"}</span>
+                </h3>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex rounded-xl bg-slate-950 p-1 border border-slate-800 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHomeAuthTab("login");
+                    setLoginError("");
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    homeAuthTab === "login"
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Đăng Nhập
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHomeAuthTab("register");
+                    setLoginError("");
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    homeAuthTab === "register"
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Tạo Đạo Hiệu Mới
+                </button>
+              </div>
 
               {loginError && (
                 <div className="mb-3 p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs">
@@ -390,7 +445,7 @@ export default function HomePage() {
                 </div>
               )}
 
-              <form onSubmit={handleQuickLogin} className="space-y-3">
+              <form onSubmit={handleQuickLogin} className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
                     Đạo Hiệu (Tên nhân vật / Tên bạn)
@@ -405,13 +460,44 @@ export default function HomePage() {
                   />
                 </div>
 
+                {homeAuthTab === "register" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Xuất Thân Tu Hành Khởi Đầu
+                    </label>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[
+                        { id: "sword", label: "Kiếm Tu", icon: "🗡️" },
+                        { id: "pill", label: "Đan Tu", icon: "🧪" },
+                        { id: "scroll", label: "Phù Sư", icon: "📜" },
+                        { id: "shield", label: "Thể Tu", icon: "🥋" },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setGuestAvatar(item.id)}
+                          className={`p-2 rounded-xl border text-center transition flex flex-col items-center justify-center ${
+                            guestAvatar === item.id
+                              ? "border-amber-500 bg-amber-500/20 text-amber-300 shadow-md"
+                              : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                          }`}
+                        >
+                          <span className="text-base mb-0.5">{item.icon}</span>
+                          <span className="text-[10px] font-semibold">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Mã PIN Cá Nhân (Để bảo vệ tài khoản)
+                    {homeAuthTab === "register" ? "Đặt Mã PIN Bảo Mật (4 - 6 số)" : "Mã PIN Bảo Mật"}
                   </label>
                   <input
                     type="password"
                     required
+                    inputMode="numeric"
                     placeholder="Ví dụ: 1234"
                     value={guestPin}
                     onChange={(e) => setGuestPin(e.target.value)}
@@ -419,20 +505,35 @@ export default function HomePage() {
                   />
                 </div>
 
+                {homeAuthTab === "register" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Xác Nhận Lại Mã PIN
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      inputMode="numeric"
+                      placeholder="Nhập lại mã PIN trên"
+                      value={guestPinConfirm}
+                      onChange={(e) => setGuestPinConfirm(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20 disabled:opacity-50 transition"
                 >
-                  {isSubmitting ? "Đang tiến vào..." : "Khai Mở Tiên Lộ (Bắt Đầu Ngay)"}
+                  {isSubmitting
+                    ? "Đang kết nối..."
+                    : homeAuthTab === "login"
+                    ? "Tiến Vào Động Phủ"
+                    : "Khai Mở Tiên Lộ (+50 💎 Tân Thủ)"}
                 </button>
               </form>
-
-              <div className="mt-3 text-center">
-                <p className="text-[11px] text-slate-500">
-                  Chưa từng tạo? Chỉ cần nhập tên & PIN mong muốn, hệ thống sẽ tự động tạo mới!
-                </p>
-              </div>
             </div>
           </div>
 
