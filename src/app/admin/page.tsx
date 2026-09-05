@@ -43,18 +43,6 @@ interface Reward {
   stock: number;
 }
 
-interface StudyLessonItem {
-  id: string;
-  order: number;
-  title: string;
-  description: string;
-  content: string;
-  exercise: string;
-  expReward: number;
-  stoneReward: number;
-  minRealmLevel: number;
-  isArchived: boolean;
-}
 
 interface RedemptionItem {
   id: string;
@@ -73,7 +61,7 @@ interface RedemptionItem {
 
 interface SubmissionItem {
   id: string;
-  type: "QUEST" | "STUDY";
+  type: "QUEST" | "EXAM";
   cultivator: {
     id: string;
     name: string;
@@ -88,10 +76,11 @@ interface SubmissionItem {
     expReward: number;
     stoneReward: number;
   };
-  lesson?: {
+  exam?: {
     id: string;
-    order: number;
-    title: string;
+    subject: string;
+    examType: string;
+    score: number;
     expReward: number;
     stoneReward: number;
   };
@@ -115,33 +104,18 @@ export default function AdminPage() {
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "STUDY" | "QUESTS" | "REWARDS" | "REDEMPTIONS">("SUBMISSIONS");
+  const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "QUESTS" | "REWARDS" | "REDEMPTIONS">("SUBMISSIONS");
 
   // Data states
   const [quests, setQuests] = useState<Quest[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
-  const [lessons, setLessons] = useState<StudyLessonItem[]>([]);
   const [redemptions, setRedemptions] = useState<RedemptionItem[]>([]);
   const [submissions, setSubmissions] = useState<SubmissionItem[]>([]);
   const [submissionFilter, setSubmissionFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING");
-  const [submissionTypeFilter, setSubmissionTypeFilter] = useState<"ALL" | "QUEST" | "STUDY">("ALL");
+  const [submissionTypeFilter, setSubmissionTypeFilter] = useState<"ALL" | "QUEST" | "EXAM">("ALL");
   const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  // Study Lesson Form Modal
-  const [showLessonModal, setShowLessonModal] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<StudyLessonItem | null>(null);
-  const [lessonForm, setLessonForm] = useState({
-    order: 1,
-    title: "",
-    description: "",
-    content: "",
-    exercise: "",
-    expReward: 50,
-    stoneReward: 20,
-    minRealmLevel: 0,
-  });
 
   // Quest Form Modal
   const [showQuestModal, setShowQuestModal] = useState(false);
@@ -210,12 +184,11 @@ export default function AdminPage() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [qRes, rRes, redRes, subRes, lRes] = await Promise.all([
+      const [qRes, rRes, redRes, subRes] = await Promise.all([
         fetch("/api/quests"),
         fetch("/api/rewards"),
         fetch("/api/admin/redemptions"),
         fetch("/api/admin/submissions"),
-        fetch("/api/admin/study"),
       ]);
 
       if (qRes.ok) {
@@ -230,15 +203,11 @@ export default function AdminPage() {
         const redData = await redRes.json();
         setRedemptions(redData.redemptions || []);
       }
-      if (lRes.ok) {
-        const lData = await lRes.json();
-        setLessons(lData.lessons || []);
-      }
       if (subRes.ok) {
         const subData = await subRes.json();
         const allSubs = [
           ...(subData.submissions || []),
-          ...(subData.studySubmissions || []),
+          ...(subData.examSubmissions || []),
         ];
         allSubs.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setSubmissions(allSubs);
@@ -251,7 +220,7 @@ export default function AdminPage() {
   };
 
   // Submissions Actions
-  const handleSubmissionAction = async (id: string, action: "APPROVE" | "REJECT" | "DELETE", type: "QUEST" | "STUDY") => {
+  const handleSubmissionAction = async (id: string, action: "APPROVE" | "REJECT" | "DELETE", type: "QUEST" | "EXAM") => {
     if (action === "DELETE" && !confirm("Đạo hữu có chắc muốn xóa bản ghi báo cáo này?")) return;
     setProcessingSubmissionId(id);
     try {
@@ -271,79 +240,6 @@ export default function AdminPage() {
       setToast({ type: "error", message: "Lỗi kết nối máy chủ" });
     } finally {
       setProcessingSubmissionId(null);
-    }
-  };
-
-  // Study Lesson Actions
-  const openCreateLesson = () => {
-    setEditingLesson(null);
-    const nextOrder = lessons.length > 0 ? Math.max(...lessons.map(l => l.order)) + 1 : 1;
-    setLessonForm({
-      order: nextOrder,
-      title: "",
-      description: "",
-      content: "",
-      exercise: "",
-      expReward: 50,
-      stoneReward: 20,
-      minRealmLevel: 0,
-    });
-    setShowLessonModal(true);
-  };
-
-  const openEditLesson = (lesson: StudyLessonItem) => {
-    setEditingLesson(lesson);
-    setLessonForm({
-      order: lesson.order,
-      title: lesson.title,
-      description: lesson.description,
-      content: lesson.content,
-      exercise: lesson.exercise,
-      expReward: lesson.expReward,
-      stoneReward: lesson.stoneReward,
-      minRealmLevel: lesson.minRealmLevel,
-    });
-    setShowLessonModal(true);
-  };
-
-  const handleSaveLesson = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const method = editingLesson ? "PUT" : "POST";
-      const body = editingLesson ? { id: editingLesson.id, ...lessonForm } : lessonForm;
-
-      const res = await fetch("/api/admin/study", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (res.ok) {
-        setShowLessonModal(false);
-        fetchAdminData();
-        setToast({ type: "success", message: editingLesson ? "Cập nhật bài học thành công!" : "Tạo bài học mới thành công!" });
-      } else {
-        const data = await res.json();
-        setToast({ type: "error", message: data.error || "Lỗi lưu bài học" });
-      }
-    } catch (e) {
-      setToast({ type: "error", message: "Lỗi kết nối máy chủ" });
-    }
-  };
-
-  const handleDeleteLesson = async (id: string) => {
-    if (!confirm("Đạo hữu có chắc muốn xóa bài học này khỏi lộ trình? Mọi tiến độ học liên quan sẽ bị xóa!")) return;
-    try {
-      const res = await fetch(`/api/admin/study?id=${id}`, { method: "DELETE" });
-      if (res.ok) {
-        fetchAdminData();
-        setToast({ type: "success", message: "Đã xóa bài học khỏi lộ trình!" });
-      } else {
-        const data = await res.json();
-        setToast({ type: "error", message: data.error || "Không thể xóa bài học" });
-      }
-    } catch (e) {
-      setToast({ type: "error", message: "Lỗi kết nối máy chủ" });
     }
   };
 
@@ -654,17 +550,6 @@ export default function AdminPage() {
           )}
         </button>
 
-        <button
-          onClick={() => setActiveTab("STUDY")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap ${
-            activeTab === "STUDY"
-              ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          <span>Lộ Trình Tu Luyện ({lessons.length})</span>
-        </button>
 
         <button
           onClick={() => setActiveTab("QUESTS")}
@@ -742,7 +627,7 @@ export default function AdminPage() {
               <div className="flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
                 {[
                   { id: "ALL", label: "Tất cả loại" },
-                  { id: "STUDY", label: "Tu Luyện (Bài học)" },
+                  { id: "EXAM", label: "Điểm Thi (Tu Luyện)" },
                   { id: "QUEST", label: "Nhiệm vụ thường" },
                 ].map((t) => (
                   <button
@@ -763,34 +648,28 @@ export default function AdminPage() {
 
           {/* Submissions List */}
           {submissions.filter((s) => 
-            (submissionFilter === "ALL" || 
-             (submissionFilter === "APPROVED" && (s.status === "APPROVED" || s.status === "COMPLETED")) ||
-             (submissionFilter === "PENDING" && s.status === "PENDING") ||
-             (submissionFilter === "REJECTED" && s.status === "REJECTED")) &&
+            (submissionFilter === "ALL" || s.status === submissionFilter) &&
             (submissionTypeFilter === "ALL" || s.type === submissionTypeFilter)
           ).length === 0 ? (
             <div className="text-center py-12 xianxia-card rounded-2xl border border-slate-800 p-6">
               <Clock className="w-10 h-10 text-slate-600 mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-300">Không có báo cáo nào trong mục này</p>
               <p className="text-xs text-slate-500 mt-1">
-                Khi Đạo Hữu bấm nộp bài hoặc hoàn thành nhiệm vụ, báo cáo sẽ hiện tại đây để bạn phê chuẩn!
+                Khi Đạo Hữu bấm nộp báo cáo điểm thi hoặc nhiệm vụ, báo cáo sẽ hiện tại đây để bạn phê chuẩn!
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {submissions
                 .filter((s) => 
-                  (submissionFilter === "ALL" || 
-                   (submissionFilter === "APPROVED" && (s.status === "APPROVED" || s.status === "COMPLETED")) ||
-                   (submissionFilter === "PENDING" && s.status === "PENDING") ||
-                   (submissionFilter === "REJECTED" && s.status === "REJECTED")) &&
+                  (submissionFilter === "ALL" || s.status === submissionFilter) &&
                   (submissionTypeFilter === "ALL" || s.type === submissionTypeFilter)
                 )
                 .map((sub) => {
                   const isPending = sub.status === "PENDING";
-                  const isApproved = sub.status === "APPROVED" || sub.status === "COMPLETED";
+                  const isApproved = sub.status === "APPROVED";
                   const isRejected = sub.status === "REJECTED";
-                  const isStudy = sub.type === "STUDY";
+                  const isExam = sub.type === "EXAM";
 
                   return (
                     <div
@@ -814,11 +693,11 @@ export default function AdminPage() {
                           </span>
 
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            isStudy 
+                            isExam 
                               ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
                               : "bg-amber-500/15 text-amber-300 border-amber-500/30"
                           }`}>
-                            {isStudy ? "📖 TU LUYỆN (BÀI HỌC)" : "📜 NHIỆM VỤ THƯỜNG"}
+                            {isExam ? "🎓 BÁO ĐIỂM THI (TU LUYỆN)" : "📜 NHIỆM VỤ THƯỜNG"}
                           </span>
 
                           <span className="text-[11px] text-slate-500 ml-auto md:ml-0">
@@ -826,12 +705,17 @@ export default function AdminPage() {
                           </span>
                         </div>
 
-                        {/* Quest or Lesson Info */}
+                        {/* Exam or Quest Info */}
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                          {isStudy ? (
-                            <span className="font-semibold text-blue-300">
-                              Tầng {sub.lesson?.order}: {sub.lesson?.title || "Bài học tu luyện"}
-                            </span>
+                          {isExam ? (
+                            <>
+                              <span className="font-semibold text-blue-300">
+                                📚 Môn: {sub.exam?.subject || "Kiểm tra"}
+                              </span>
+                              <span className="font-bold font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                                ⭐ {sub.exam?.score?.toFixed(1)} Điểm ({sub.exam?.examType === "FINAL" ? "Cuối kỳ x3" : sub.exam?.examType === "MIDTERM" ? "Giữa kỳ x2" : "Thường xuyên x1"})
+                              </span>
+                            </>
                           ) : (
                             <span className="font-semibold text-amber-300">
                               📜 {sub.quest?.title || "Nhiệm vụ"}
@@ -839,10 +723,10 @@ export default function AdminPage() {
                           )}
 
                           <span className="text-amber-400 font-bold flex items-center gap-1">
-                            <Zap className="w-3.5 h-3.5" /> +{isStudy ? sub.lesson?.expReward : sub.quest?.expReward} Tu Vi
+                            <Zap className="w-3.5 h-3.5" /> +{isExam ? sub.exam?.expReward : sub.quest?.expReward} Tu Vi
                           </span>
                           <span className="text-emerald-400 font-bold flex items-center gap-1">
-                            <Gem className="w-3.5 h-3.5" /> +{isStudy ? sub.lesson?.stoneReward : sub.quest?.stoneReward} Linh Thạch
+                            <Gem className="w-3.5 h-3.5" /> +{isExam ? sub.exam?.stoneReward : sub.quest?.stoneReward} Linh Thạch
                           </span>
                         </div>
 
@@ -926,71 +810,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* TAB 1: Quản lý Lộ Trình Tu Luyện (Study Lessons) */}
-      {activeTab === "STUDY" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-slate-200">Lộ Trình Giáo Trình Tu Luyện Tuần Tự</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Các bài học sẽ được mở khóa tuần tự cho đệ tử (Bài 1 ➔ Bài 2 ➔ Bài 3...)
-              </p>
-            </div>
-            <button
-              onClick={openCreateLesson}
-              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:brightness-110 shadow-md shadow-blue-500/20 transition active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm Tầng Tu Luyện Mới</span>
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {lessons.map((lesson) => (
-              <div
-                key={lesson.id}
-                className="p-5 rounded-2xl xianxia-card border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                      Tầng {lesson.order}
-                    </span>
-                    <h4 className="font-bold text-slate-100 text-base">{lesson.title}</h4>
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{lesson.description}</p>
-
-                  <div className="flex items-center space-x-4 text-xs font-semibold pt-1">
-                    <span className="text-amber-400 flex items-center gap-1">
-                      <Zap className="w-3.5 h-3.5" /> +{lesson.expReward} Tu Vi
-                    </span>
-                    <span className="text-emerald-400 flex items-center gap-1">
-                      <Gem className="w-3.5 h-3.5" /> +{lesson.stoneReward} Linh Thạch
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 shrink-0">
-                  <button
-                    onClick={() => openEditLesson(lesson)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                    title="Sửa bài học"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteLesson(lesson.id)}
-                    className="p-2 rounded-xl bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/60 text-rose-300 transition"
-                    title="Xóa bài học"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* TAB 2: Quản lý Nhiệm vụ */}
       {activeTab === "QUESTS" && (
@@ -1400,131 +1219,6 @@ export default function AdminPage() {
                   className="flex-1 py-2 px-4 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400"
                 >
                   Lưu Bảo Vật
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {/* Study Lesson Modal */}
-      {showLessonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl bg-[#0e1622] border border-blue-500/40 shadow-2xl">
-            <h3 className="text-xl font-bold text-blue-300">
-              {editingLesson ? `Sửa Tầng Tu Luyện ${editingLesson.order}` : "Ban Bố Tầng Tu Luyện Mới"}
-            </h3>
-
-            <form onSubmit={handleSaveLesson} className="mt-4 space-y-3.5">
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Thứ Tự Tầng (1, 2, 3...)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={lessonForm.order}
-                    onChange={(e) => setLessonForm({ ...lessonForm, order: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Tên Bài Học / Bí Kíp
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ví dụ: Tầng 1: Khai Khẩu Tiếng Anh Cơ Bản"
-                    value={lessonForm.title}
-                    onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Mô Tả Tóm Tắt (1 - 2 câu)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Mô tả mục tiêu của bài học..."
-                  value={lessonForm.description}
-                  onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nội Dung Chi Tiết (Lý thuyết, Link video, Hướng dẫn)
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="Nhập nội dung bài giảng, liên kết tài liệu hoặc link YouTube..."
-                  value={lessonForm.content}
-                  onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Yêu Cầu Bài Tập Thực Hành / Minh Chứng Cần Làm
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Ví dụ: Quay video phát âm 10 câu tiếng Anh và gửi qua Facebook cho Trưởng Lão..."
-                  value={lessonForm.exercise}
-                  onChange={(e) => setLessonForm({ ...lessonForm, exercise: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Thưởng Tu Vi
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={lessonForm.expReward}
-                    onChange={(e) => setLessonForm({ ...lessonForm, expReward: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Thưởng Linh Thạch
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={lessonForm.stoneReward}
-                    onChange={(e) => setLessonForm({ ...lessonForm, stoneReward: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100"
-                  />
-                </div>
-              </div>
-
-              <div className="flex space-x-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowLessonModal(false)}
-                  className="flex-1 py-2 px-4 rounded-lg text-xs font-medium text-slate-400 bg-slate-800 hover:bg-slate-700"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2 px-4 rounded-lg text-xs font-bold bg-blue-500 text-white hover:bg-blue-400"
-                >
-                  Lưu Tầng Tu Luyện
                 </button>
               </div>
             </form>

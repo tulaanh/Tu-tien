@@ -1,63 +1,93 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { calculateExamReward, ExamType } from "@/lib/studyConfig";
 
+// GET: Lấy danh sách lịch sử báo điểm bài kiểm tra
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const cultivatorId = searchParams.get("cultivatorId");
 
-    const lessons = await prisma.studyLesson.findMany({
-      where: { isArchived: false },
-      orderBy: { order: "asc" },
-    });
-
-    if (lessons.length === 0) {
-      return NextResponse.json({ lessons: [] });
-    }
-
     if (!cultivatorId) {
-      const guestLessons = lessons.map((l, index) => ({
-        ...l,
-        status: index === 0 ? "UNLOCKED" : "LOCKED",
-        progress: null,
-      }));
-      return NextResponse.json({ lessons: guestLessons });
+      return NextResponse.json({ reports: [] });
     }
 
-    const progressList = await prisma.studyProgress.findMany({
+    const reports = await prisma.examReport.findMany({
       where: { cultivatorId },
+      orderBy: { createdAt: "desc" },
     });
 
-    const progressMap = new Map(progressList.map((p) => [p.lessonId, p]));
+    // Thống kê tổng Tu Vi & Linh Thạch nhận từ bài kiểm tra
+    const totalApproved = reports.filter((r) => r.status === "APPROVED");
+    const totalExpEarned = totalApproved.reduce((sum, r) => sum + r.expReward, 0);
+    const totalStonesEarned = totalApproved.reduce((sum, r) => sum + r.stoneReward, 0);
 
-    let previousCompleted = true;
-
-    const mappedLessons = lessons.map((lesson) => {
-      const prog = progressMap.get(lesson.id);
-      let status = "LOCKED";
-      let note = prog?.note || null;
-
-      if (prog) {
-        status = prog.status;
-      } else if (previousCompleted) {
-        status = "UNLOCKED";
-      } else {
-        status = "LOCKED";
-      }
-
-      previousCompleted = status === "COMPLETED";
-
-      return {
-        ...lesson,
-        status,
-        note,
-        progressId: prog?.id || null,
-      };
+    return NextResponse.json({
+      reports,
+      stats: {
+        totalReports: reports.length,
+        approvedCount: totalApproved.length,
+        totalExpEarned,
+        totalStonesEarned,
+      },
     });
-
-    return NextResponse.json({ lessons: mappedLessons });
   } catch (error) {
-    console.error("Lỗi lấy danh sách bài học:", error);
-    return NextResponse.json({ error: "Lỗi nạp lộ trình tu luyện" }, { status: 500 });
+    console.error("Lỗi lấy danh sách báo điểm kiểm tra:", error);
+    return NextResponse.json({ error: "Lỗi nạp danh sách báo điểm" }, { status: 500 });
+  }
+}
+
+// POST: Nộp báo cáo điểm bài kiểm tra mới
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { cultivatorId, subject, examType, score, note } = body;
+
+    if (!cultivatorId || !subject || !subject.trim() || score === undefined || score === null) {
+      return NextResponse.json(
+        { error: "Vui lòng điền đầy đủ Tên môn học và Điểm số đạt được!" },
+        { status: 400 }
+      );
+    }
+
+    const numScore = Number(score);
+    if (isNaN(numScore) || numScore < 8.0 || numScore > 10.0) {
+      return NextResponse.json(
+        { error: "Tông Môn chỉ trao thưởng cho các bài kiểm tra đạt điểm từ 8.0 đến 10.0!" },
+        { status: 400 }
+      );
+    }
+
+    const validExamType: ExamType = (["REGULAR", "MIDTERM", "FINAL"].includes(examType) ? examType : "REGULAR") as ExamType;
+    const { expReward, stoneReward } = calculateExamReward(numScore, validExamType);
+
+    const cultivator = await prisma.cultivator.findUnique({
+      where: { id: cultivatorId },
+    });
+
+    if (!cultivator) {
+      return NextResponse.json({ error: "Đạo Hữu không tồn tại" }, { status: 404 });
+    }
+
+    const report = await prisma.examReport.create({
+      data: {
+        cultivatorId,
+        subject: subject.trim(),
+        examType: validExamType,
+        score: numScore,
+        expReward,
+        stoneReward,
+        note: note?.trim() || "Đã gửi ảnh bài kiểm tra qua Facebook cho Trưởng Lão",
+        status: "PENDING",
+      },
+    });
+
+    return NextResponse.json({
+      message: `Đã gửi báo cáo điểm ${numScore} môn ${subject.trim()}! Vui lòng gửi ảnh minh chứng bài thi qua Facebook cho Trưởng Lão để được thẩm định.`,
+      report,
+    });
+  } catch (error) {
+    console.error("Lỗi gửi báo cáo điểm:", error);
+    return NextResponse.json({ error: "Không thể nộp báo cáo điểm lúc này" }, { status: 500 });
   }
 }

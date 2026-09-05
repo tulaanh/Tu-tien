@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // Lấy báo cáo nhiệm vụ
+    // 1. Lấy báo cáo nhiệm vụ
     const questSubmissions = await prisma.questCompletion.findMany({
       orderBy: { createdAt: "desc" },
       include: {
@@ -36,9 +36,9 @@ export async function GET(request: Request) {
       },
     });
 
-    // Lấy báo cáo bài học tu luyện (StudyProgress)
-    const studySubmissions = await prisma.studyProgress.findMany({
-      orderBy: { updatedAt: "desc" },
+    // 2. Lấy báo cáo điểm bài kiểm tra (ExamReport)
+    const examSubmissions = await prisma.examReport.findMany({
+      orderBy: { createdAt: "desc" },
       include: {
         cultivator: {
           select: {
@@ -52,7 +52,6 @@ export async function GET(request: Request) {
             avatar: true,
           },
         },
-        lesson: true,
       },
     });
 
@@ -61,25 +60,31 @@ export async function GET(request: Request) {
       type: "QUEST",
     }));
 
-    const formattedStudySubmissions = studySubmissions.map((s) => ({
+    const formattedExamSubmissions = examSubmissions.map((s) => ({
       id: s.id,
       cultivatorId: s.cultivatorId,
-      lessonId: s.lessonId,
       status: s.status,
       note: s.note,
       createdAt: s.createdAt,
-      completedAt: s.completedAt,
-      type: "STUDY",
+      completedAt: s.approvedAt,
+      type: "EXAM",
       cultivator: s.cultivator,
-      lesson: s.lesson,
+      exam: {
+        id: s.id,
+        subject: s.subject,
+        examType: s.examType,
+        score: s.score,
+        expReward: s.expReward,
+        stoneReward: s.stoneReward,
+      },
     }));
 
     return NextResponse.json({
       submissions: formattedQuestSubmissions,
-      studySubmissions: formattedStudySubmissions,
+      examSubmissions: formattedExamSubmissions,
     });
   } catch (error) {
-    console.error("Lỗi lấy danh sách nộp nhiệm vụ / bài học:", error);
+    console.error("Lỗi lấy danh sách nộp nhiệm vụ / bài kiểm tra:", error);
     return NextResponse.json(
       { error: "Lỗi lấy danh sách nộp bài" },
       { status: 500 }
@@ -107,52 +112,52 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Thiếu thông tin xử lý" }, { status: 400 });
     }
 
-    // === XỬ LÝ PHÊ DUYỆT BÀI HỌC TU LUYỆN (STUDY) ===
-    if (type === "STUDY") {
-      const progress = await prisma.studyProgress.findUnique({
+    // === XỬ LÝ PHÊ DUYỆT BÁO ĐIỂM KIỂM TRA (EXAM) ===
+    if (type === "EXAM") {
+      const examReport = await prisma.examReport.findUnique({
         where: { id },
-        include: { lesson: true, cultivator: true },
+        include: { cultivator: true },
       });
 
-      if (!progress) {
-        return NextResponse.json({ error: "Không tìm thấy báo cáo tu luyện" }, { status: 404 });
+      if (!examReport) {
+        return NextResponse.json({ error: "Không tìm thấy báo cáo điểm thi" }, { status: 404 });
       }
 
       if (action === "DELETE") {
-        await prisma.studyProgress.delete({ where: { id } });
-        return NextResponse.json({ success: true, message: "Đã xóa bản ghi báo cáo tu luyện" });
+        await prisma.examReport.delete({ where: { id } });
+        return NextResponse.json({ success: true, message: "Đã xóa bản ghi báo cáo điểm thi" });
       }
 
       if (action === "REJECT") {
-        const updated = await prisma.studyProgress.update({
+        const updated = await prisma.examReport.update({
           where: { id },
           data: { status: "REJECTED" },
         });
         return NextResponse.json({
           success: true,
-          message: "Đã bác bỏ báo cáo bài học.",
+          message: "Đã bác bỏ báo cáo điểm thi.",
           submission: updated,
         });
       }
 
       if (action === "APPROVE") {
-        if (progress.status === "COMPLETED") {
+        if (examReport.status === "APPROVED") {
           return NextResponse.json({
             success: true,
-            message: "Bài học này đã được phê chuẩn trước đó rồi.",
+            message: "Báo cáo điểm này đã được phê chuẩn trước đó rồi.",
           });
         }
 
-        const updatedProgress = await prisma.studyProgress.update({
+        const updatedExam = await prisma.examReport.update({
           where: { id },
           data: {
-            status: "COMPLETED",
-            completedAt: new Date(),
+            status: "APPROVED",
+            approvedAt: new Date(),
           },
         });
 
-        const { cultivator, lesson } = progress;
-        let newExp = cultivator.currentExp + lesson.expReward;
+        const { cultivator } = examReport;
+        let newExp = cultivator.currentExp + examReport.expReward;
         let reachedBottleneck = cultivator.isBottleneck;
 
         if (newExp >= cultivator.maxExp) {
@@ -165,15 +170,20 @@ export async function PUT(request: Request) {
           data: {
             currentExp: newExp,
             isBottleneck: reachedBottleneck,
-            spiritStones: { increment: lesson.stoneReward },
+            spiritStones: { increment: examReport.stoneReward },
           },
         });
 
+        const realmInfo = getRealmByLevel(updatedCultivator.realmLevel);
+
         return NextResponse.json({
           success: true,
-          message: `Đã phê chuẩn bài học! Đạo hữu ${cultivator.name} nhận +${lesson.expReward} Tu Vi & +${lesson.stoneReward} Linh Thạch. Mở khóa tầng tiếp theo!`,
-          submission: updatedProgress,
-          cultivator: updatedCultivator,
+          message: `Đã phê chuẩn điểm môn ${examReport.subject} (${examReport.score} điểm)! Đạo hữu ${cultivator.name} nhận +${examReport.expReward} Tu Vi & +${examReport.stoneReward} Linh Thạch.`,
+          submission: updatedExam,
+          cultivator: {
+            ...updatedCultivator,
+            realmInfo,
+          },
         });
       }
     }
@@ -254,7 +264,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ error: "Hành động không hợp lệ" }, { status: 400 });
   } catch (error) {
-    console.error("Lỗi duyệt nhiệm vụ / bài học:", error);
+    console.error("Lỗi duyệt nhiệm vụ / điểm thi:", error);
     return NextResponse.json(
       { error: "Lỗi xử lý duyệt: " + (error instanceof Error ? error.message : "") },
       { status: 500 }
