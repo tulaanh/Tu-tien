@@ -14,7 +14,8 @@ import {
   LogOut, 
   Gem, 
   Flame,
-  KeyRound
+  KeyRound,
+  BookOpen
 } from "lucide-react";
 
 export default function Navbar() {
@@ -74,6 +75,7 @@ export default function Navbar() {
 
   const navItems = [
     { label: "Động Phủ", mobileLabel: "Động Phủ", href: "/", icon: Flame },
+    { label: "Tu Luyện", mobileLabel: "Tu Luyện", href: "/study", icon: BookOpen },
     { label: "Nhiệm Vụ Đường", mobileLabel: "Nhiệm Vụ", href: "/quests", icon: Scroll },
     { label: "Tàng Bảo Các", mobileLabel: "Tàng Bảo", href: "/shop", icon: Gift },
     { label: "Bảng Phong Thần", mobileLabel: "Phong Thần", href: "/leaderboard", icon: Trophy },
@@ -168,7 +170,7 @@ export default function Navbar() {
 
       {/* Mobile Fixed Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#090e15]/95 backdrop-blur-xl border-t border-amber-900/40 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.6)]">
-        <div className={`grid ${navItems.length === 5 ? "grid-cols-5" : "grid-cols-4"} gap-1`}>
+        <div className={`grid ${navItems.length === 6 ? "grid-cols-6" : navItems.length === 5 ? "grid-cols-5" : "grid-cols-4"} gap-0.5 sm:gap-1`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;

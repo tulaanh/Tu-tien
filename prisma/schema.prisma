@@ -24,6 +24,7 @@ model Cultivator {
 
   completions QuestCompletion[]
   redemptions Redemption[]
+  studyProgress StudyProgress[]
 }
 
 model Quest {
@@ -82,3 +83,37 @@ model Redemption {
   cultivator   Cultivator @relation(fields: [cultivatorId], references: [id], onDelete: Cascade)
   reward       Reward     @relation(fields: [rewardId], references: [id], onDelete: Cascade)
 }
+
+model StudyLesson {
+  id            String          @id @default(cuid())
+  order         Int             @default(1) // Thứ tự bài học: 1, 2, 3...
+  title         String          // Tên bài học / Bí kíp tu luyện
+  description   String          // Tóm tắt ngắn gọn
+  content       String          // Nội dung chi tiết: Lý thuyết, link tài liệu, video
+  exercise      String          // Yêu cầu thực hành / nộp bài tập
+  expReward     Int             @default(50)
+  stoneReward   Int             @default(20)
+  minRealmLevel Int             @default(0)
+  isArchived    Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  progress      StudyProgress[]
+}
+
+model StudyProgress {
+  id           String      @id @default(cuid())
+  cultivatorId String
+  lessonId     String
+  status       String      @default("LOCKED") // LOCKED, UNLOCKED, PENDING, COMPLETED, REJECTED
+  note         String?     // Ghi chú nộp bài / link minh chứng
+  completedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  cultivator   Cultivator  @relation(fields: [cultivatorId], references: [id], onDelete: Cascade)
+  lesson       StudyLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([cultivatorId, lessonId])
+}
+

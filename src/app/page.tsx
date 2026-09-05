@@ -17,7 +17,8 @@ import {
   Shield, 
   Swords, 
   Gem,
-  Award
+  Award,
+  BookOpen
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -189,13 +190,33 @@ export default function HomePage() {
           <CultivationCard />
 
           {/* Quick Navigation Hub */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              href="/study"
+              className="group p-5 rounded-2xl xianxia-card border border-blue-500/20 hover:border-blue-500/40 transition flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-100 group-hover:text-blue-300 transition">
+                    Lộ Trình Tu Luyện
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Học tập tuần tự, vượt tầng nhận thưởng
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1 transition" />
+            </Link>
+
             <Link
               href="/quests"
               className="group p-5 rounded-2xl xianxia-card border border-amber-500/20 hover:border-amber-500/40 transition flex items-center justify-between"
             >
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
                   <Scroll className="w-6 h-6" />
                 </div>
                 <div>
@@ -212,7 +233,7 @@ export default function HomePage() {
 
             <Link
               href="/shop"
-              className="group p-5 rounded-2xl xianxia-card border border-amber-500/20 hover:border-amber-500/40 transition flex items-center justify-between"
+              className="group p-5 rounded-2xl xianxia-card border border-emerald-500/20 hover:border-emerald-500/40 transition flex items-center justify-between"
             >
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
@@ -235,11 +256,11 @@ export default function HomePage() {
               className="group p-5 rounded-2xl xianxia-card border border-amber-500/20 hover:border-amber-500/40 transition flex items-center justify-between"
             >
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
                   <Trophy className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-100 group-hover:text-amber-300 transition">
+                  <h3 className="font-bold text-slate-100 group-hover:text-purple-300 transition">
                     Bảng Phong Thần
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -247,7 +268,7 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition" />
+              <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition" />
             </Link>
           </div>
 
