@@ -232,7 +232,15 @@ export async function PUT(request: Request) {
       });
 
       const { cultivator, quest } = submission;
-      let newExp = cultivator.currentExp + quest.expReward;
+
+      // Tính thưởng có cộng thêm Streak Bonus %
+      const bonusPercent = Math.min(30, cultivator.streakCount * 1);
+      const bonusExp = Math.round(quest.expReward * (bonusPercent / 100));
+      const bonusStones = Math.round(quest.stoneReward * (bonusPercent / 100));
+      const awardedExp = quest.expReward + bonusExp;
+      const awardedStones = quest.stoneReward + bonusStones;
+
+      let newExp = cultivator.currentExp + awardedExp;
       let reachedBottleneck = cultivator.isBottleneck;
 
       if (newExp >= cultivator.maxExp) {
@@ -245,15 +253,17 @@ export async function PUT(request: Request) {
         data: {
           currentExp: newExp,
           isBottleneck: reachedBottleneck,
-          spiritStones: { increment: quest.stoneReward },
+          spiritStones: { increment: awardedStones },
         },
       });
 
       const realmInfo = getRealmByLevel(updatedCultivator.realmLevel);
 
+      const bonusNote = bonusPercent > 0 ? ` (bao gồm +${bonusPercent}% Streak 🔥)` : "";
+
       return NextResponse.json({
         success: true,
-        message: `Đã phê chuẩn thành công! Đạo hữu ${cultivator.name} nhận +${quest.expReward} Tu Vi & +${quest.stoneReward} Linh Thạch.`,
+        message: `Đã phê chuẩn thành công! Đạo hữu ${cultivator.name} nhận +${awardedExp} Tu Vi & +${awardedStones} Linh Thạch${bonusNote}.`,
         submission: updatedCompletion,
         cultivator: {
           ...updatedCultivator,

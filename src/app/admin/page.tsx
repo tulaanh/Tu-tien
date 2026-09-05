@@ -125,7 +125,7 @@ export default function AdminPage() {
     description: "",
     category: "DAILY",
     expReward: 30,
-    stoneReward: 8,
+    stoneReward: 15,
     difficulty: "Trung bình",
     minRealmLevel: 0,
   });
@@ -252,7 +252,7 @@ export default function AdminPage() {
       description: "",
       category: "DAILY",
       expReward: 30,
-      stoneReward: 8,
+      stoneReward: 15,
       difficulty: "Trung bình",
       minRealmLevel: 0,
     });

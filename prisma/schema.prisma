@@ -17,6 +17,8 @@ model Cultivator {
   maxExp       Int      @default(100)
   spiritStones Int      @default(0)
   isBottleneck Boolean  @default(false)
+  streakCount  Int      @default(0)
+  lastStreakDate DateTime?
   avatar       String   @default("sword")
   bio          String?  @default("Hành trình cầu trường sinh bắt đầu từ bước chân đầu tiên.")
   createdAt    DateTime @default(now())
@@ -34,7 +36,7 @@ model Quest {
   category      String   @default("DAILY") // DAILY, CHALLENGE, BREAKTHROUGH
   minRealmLevel Int      @default(0)
   expReward     Int      @default(20)
-  stoneReward   Int      @default(5)
+  stoneReward   Int      @default(10)
   difficulty    String   @default("Dễ")
   icon          String   @default("scroll")
   isArchived    Boolean  @default(false)

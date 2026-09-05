@@ -18,7 +18,8 @@ import {
   Swords, 
   Gem,
   Award,
-  BookOpen
+  BookOpen,
+  Flame
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -29,6 +30,8 @@ interface QuestItem {
   category: string;
   expReward: number;
   stoneReward: number;
+  bonusExp?: number;
+  bonusStones?: number;
   difficulty: string;
   isCompleted?: boolean;
   isPending?: boolean;
@@ -54,8 +57,10 @@ export default function HomePage() {
   const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Daily quests preview
+  // Daily quests & Streak preview
   const [dailyQuests, setDailyQuests] = useState<QuestItem[]>([]);
+  const [dailyStats, setDailyStats] = useState<any>(null);
+  const [streakInfo, setStreakInfo] = useState<any>(null);
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -67,6 +72,8 @@ export default function HomePage() {
         if (qRes.ok) {
           const data = await qRes.json();
           setDailyQuests((data.quests || []).slice(0, 4));
+          if (data.dailyStats) setDailyStats(data.dailyStats);
+          if (data.streakInfo) setStreakInfo(data.streakInfo);
         }
       } else {
         const qRes = await fetch("/api/quests");
@@ -272,6 +279,47 @@ export default function HomePage() {
             </Link>
           </div>
 
+          {/* Daily Progress & Streak Quick Widget */}
+          {cultivator && dailyStats && (
+            <div className="p-4 sm:p-5 rounded-2xl xianxia-card border border-amber-500/30 bg-gradient-to-r from-slate-900 via-[#0d141d] to-[#121b26] shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center text-slate-950 font-black shadow-md shadow-amber-500/20 shrink-0">
+                  <Flame className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-slate-100 text-sm">
+                      Chuỗi: <strong className="text-amber-300 font-mono font-black">{streakInfo?.streakCount || 0} Ngày</strong>
+                    </span>
+                    {(streakInfo?.bonusPercent || 0) > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        +{streakInfo?.bonusPercent}% Thưởng Ngày Mai
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {dailyStats.remainingDaily > 0
+                      ? `Hôm nay còn thiếu ${dailyStats.remainingDaily} nhiệm vụ nhật thường`
+                      : `🎉 Đã hoàn thành toàn bộ nhật thường hôm nay!`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-1 max-w-xs space-y-1">
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Tiến độ nhật thường:</span>
+                  <span className="font-mono font-bold text-amber-300">{dailyStats.completedDaily}/{dailyStats.totalDaily} ({dailyStats.progressPercent}%)</span>
+                </div>
+                <div className="h-2.5 w-full bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
+                    style={{ width: `${dailyStats.progressPercent}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Daily Quests Focus */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -320,12 +368,18 @@ export default function HomePage() {
                   </div>
 
                   <div className="mt-5 pt-3 border-t border-slate-800 flex items-center justify-between">
-                    <div className="flex items-center space-x-3 text-xs">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                       <span className="text-amber-400 font-semibold flex items-center gap-1">
-                        <Zap className="w-3.5 h-3.5" /> +{quest.expReward} Tu Vi
+                        <Zap className="w-3.5 h-3.5" /> +{quest.expReward}
+                        {(quest.bonusExp || 0) > 0 && (
+                          <span className="text-amber-300 font-normal text-[10px]">(+{quest.bonusExp} 🔥)</span>
+                        )} Tu Vi
                       </span>
                       <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                        <Gem className="w-3.5 h-3.5" /> +{quest.stoneReward} Linh Thạch
+                        <Gem className="w-3.5 h-3.5" /> +{quest.stoneReward}
+                        {(quest.bonusStones || 0) > 0 && (
+                          <span className="text-emerald-300 font-normal text-[10px]">(+{quest.bonusStones} 🔥)</span>
+                        )} Linh Thạch
                       </span>
                     </div>
 

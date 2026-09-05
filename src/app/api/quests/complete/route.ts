@@ -78,11 +78,60 @@ export async function POST(request: Request) {
       },
     });
 
+    let streakGained = false;
+    let newStreak = cultivator.streakCount;
+    let streakMessage = "";
+
+    // 4. Nếu là nhiệm vụ DAILY, kiểm tra xem đã nộp hết tất cả nhiệm vụ nhật thường trong ngày chưa
+    if (quest.category === "DAILY") {
+      const allDaily = await prisma.quest.findMany({
+        where: { category: "DAILY", isArchived: false },
+      });
+
+      const todayCompletions = await prisma.questCompletion.findMany({
+        where: {
+          cultivatorId,
+          createdAt: { gte: today },
+          status: { in: ["PENDING", "APPROVED"] },
+        },
+      });
+
+      const isAllDailyDone =
+        allDaily.length > 0 &&
+        allDaily.every((dq) => todayCompletions.some((tc) => tc.questId === dq.id));
+
+      if (isAllDailyDone) {
+        const lastStreakMidnight = cultivator.lastStreakDate
+          ? new Date(cultivator.lastStreakDate)
+          : null;
+        if (lastStreakMidnight) lastStreakMidnight.setHours(0, 0, 0, 0);
+
+        const hasStreakUpdatedToday =
+          lastStreakMidnight && lastStreakMidnight.getTime() === today.getTime();
+
+        if (!hasStreakUpdatedToday) {
+          newStreak = cultivator.streakCount + 1;
+          await prisma.cultivator.update({
+            where: { id: cultivatorId },
+            data: {
+              streakCount: newStreak,
+              lastStreakDate: new Date(),
+            },
+          });
+          streakGained = true;
+          const bonusPct = Math.min(30, newStreak * 1);
+          streakMessage = ` 🔥 Chúc mừng Đạo Hữu đã hoàn thành xuất sắc toàn bộ nhiệm vụ nhật thường hôm nay! Chuỗi tăng lên ${newStreak} ngày (+${bonusPct}% phần thưởng cho ngày mai).`;
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       status: "PENDING",
       submissionId: submission.id,
-      message: `📜 Đã gửi báo cáo nhiệm vụ "${quest.title}" lên Trưởng Lão! Tu Vi (+${quest.expReward}) & Linh Thạch (+${quest.stoneReward}) sẽ được ban thưởng ngay khi được phê chuẩn.`,
+      streakGained,
+      newStreak,
+      message: `📜 Đã gửi báo cáo nhiệm vụ "${quest.title}" lên Trưởng Lão! Tu Vi (+${quest.expReward}) & Linh Thạch (+${quest.stoneReward}) sẽ được ban thưởng ngay khi được phê chuẩn.${streakMessage}`,
     });
   } catch (error) {
     console.error("Lỗi gửi báo cáo quest:", error);

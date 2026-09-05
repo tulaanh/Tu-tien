@@ -402,37 +402,59 @@ export default function StudyPage() {
               <span>Quy Định Thưởng Bài Kiểm Tra</span>
             </h3>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <div className="space-y-2 text-xs">
+              <div className="p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-slate-200 block">Điểm 8.0 - 8.9</span>
-                  <span className="text-[11px] text-slate-400">Đạt yêu cầu xuất sắc</span>
+                  <span className="font-bold text-slate-300 block">Điểm 8.0 - 8.4</span>
+                  <span className="text-[10px] text-slate-500">Khởi đầu giỏi</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-bold text-amber-400">+50 Tu Vi</span>
-                  <span className="text-[10px] text-slate-500 block">0 Linh Thạch</span>
+                  <span className="font-bold text-amber-400 block">+50 ~ 70 Tu Vi</span>
+                  <span className="text-[10px] text-slate-500">0 Linh Thạch</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-950/80 border border-amber-500/30 flex items-center justify-between">
+              <div className="p-2.5 rounded-2xl bg-slate-950/80 border border-blue-500/30 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-amber-300 block">Điểm 9.0 - 9.9</span>
-                  <span className="text-[11px] text-slate-400">Tuyệt hảo xuất chúng</span>
+                  <span className="font-bold text-blue-300 block">Điểm 8.5 - 8.9</span>
+                  <span className="text-[10px] text-slate-400">Xuất sắc cận 9</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-bold text-amber-400">+100 Tu Vi</span>
-                  <span className="font-bold text-emerald-400 block">+10 Linh Thạch</span>
+                  <span className="font-bold text-amber-400 block">+75 ~ 95 Tu Vi</span>
+                  <span className="font-bold text-emerald-400 text-[11px]">+5 ~ 9 Linh Thạch</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-950/40 to-yellow-950/30 border border-amber-400/50 flex items-center justify-between">
+              <div className="p-2.5 rounded-2xl bg-slate-950/80 border border-amber-500/30 flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-amber-300 block">Điểm 9.0 - 9.4</span>
+                  <span className="text-[10px] text-slate-400">Tuyệt hảo xuất chúng</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-bold text-amber-400 block">+110 ~ 150 Tu Vi</span>
+                  <span className="font-bold text-emerald-400 text-[11px]">+10 ~ 16 Linh Thạch</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-2xl bg-slate-950/80 border border-yellow-500/40 flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-yellow-300 block">Điểm 9.5 - 9.9</span>
+                  <span className="text-[10px] text-amber-400/80">Cận kề tuyệt đối</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-bold text-amber-300 block">+160 ~ 192 Tu Vi</span>
+                  <span className="font-bold text-emerald-400 text-[11px]">+18 ~ 22 Linh Thạch</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-2xl bg-gradient-to-r from-amber-950/40 to-yellow-950/30 border border-amber-400/50 flex items-center justify-between">
                 <div>
                   <span className="font-bold text-yellow-300 block">Điểm 10.0 Tuyệt Đối</span>
-                  <span className="text-[11px] text-amber-400/80">Đỉnh phong thiên tài</span>
+                  <span className="text-[10px] text-amber-400/80">Đỉnh phong thiên tài</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-bold text-amber-300">+200 Tu Vi</span>
-                  <span className="font-bold text-emerald-300 block">+25 Linh Thạch</span>
+                  <span className="font-bold text-amber-300 block">+200 Tu Vi</span>
+                  <span className="font-bold text-emerald-300 text-[11px]">+25 Linh Thạch</span>
                 </div>
               </div>
             </div>

@@ -15,9 +15,34 @@ export async function GET(request: Request) {
       return NextResponse.json({ quests });
     }
 
-    // Kiểm tra lịch sử nộp và duyệt nhiệm vụ
+    // Lấy thông tin đạo hữu để kiểm tra Chuỗi (Streak)
+    const cultivator = await prisma.cultivator.findUnique({
+      where: { id: cultivatorId },
+    });
+
+    let currentStreak = cultivator?.streakCount || 0;
+    const lastStreakDate = cultivator?.lastStreakDate ? new Date(cultivator.lastStreakDate) : null;
+
+    // Kiểm tra đứt chuỗi: nếu lần cuối đạt chuỗi trước ngày hôm qua (bỏ lỡ > 1 ngày) thì reset về 0
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (lastStreakDate && currentStreak > 0) {
+      const lastDateMidnight = new Date(lastStreakDate);
+      lastDateMidnight.setHours(0, 0, 0, 0);
+      if (lastDateMidnight < yesterday) {
+        currentStreak = 0;
+        await prisma.cultivator.update({
+          where: { id: cultivatorId },
+          data: { streakCount: 0 },
+        });
+      }
+    }
+
+    const bonusPercent = Math.min(30, currentStreak * 1); // +1% mỗi ngày, tối đa +30%
 
     const completions = await prisma.questCompletion.findMany({
       where: { cultivatorId },
@@ -28,7 +53,14 @@ export async function GET(request: Request) {
       const relevantCompletions = completions.filter((c) => c.questId === q.id);
 
       // 1. Kiểm tra xem có đơn đang Chờ Duyệt (PENDING) không
-      const hasPending = relevantCompletions.some((c) => c.status === "PENDING");
+      const hasPending = relevantCompletions.some((c) => {
+        if (c.status !== "PENDING") return false;
+        if (q.category === "DAILY") {
+          const compDate = new Date(c.createdAt);
+          return compDate >= today;
+        }
+        return true;
+      });
 
       // 2. Kiểm tra xem ĐÃ DUYỆT (APPROVED) chưa
       const isApproved = relevantCompletions.some((c) => {
@@ -49,16 +81,53 @@ export async function GET(request: Request) {
       else if (isApproved) submissionStatus = "APPROVED";
       else if (isRejected) submissionStatus = "REJECTED";
 
+      // Tính thưởng có cộng thêm Streak Bonus %
+      const bonusExp = Math.round(q.expReward * (bonusPercent / 100));
+      const bonusStones = Math.round(q.stoneReward * (bonusPercent / 100));
+      const effectiveExp = q.expReward + bonusExp;
+      const effectiveStones = q.stoneReward + bonusStones;
+
       return {
         ...q,
         isCompleted: isApproved,
         isPending: hasPending,
         isRejected,
         submissionStatus,
+        bonusExp,
+        bonusStones,
+        effectiveExp,
+        effectiveStones,
       };
     });
 
-    return NextResponse.json({ quests: questsWithStatus });
+    // Tính toán tiến độ nhiệm vụ Nhật Thường (DAILY) hôm nay
+    const dailyQuests = questsWithStatus.filter((q) => q.category === "DAILY");
+    const totalDaily = dailyQuests.length;
+    const completedDaily = dailyQuests.filter(
+      (q) => q.submissionStatus === "PENDING" || q.submissionStatus === "APPROVED"
+    ).length;
+    const approvedDaily = dailyQuests.filter((q) => q.submissionStatus === "APPROVED").length;
+    const remainingDaily = Math.max(0, totalDaily - completedDaily);
+    const progressPercent = totalDaily > 0 ? Math.round((completedDaily / totalDaily) * 100) : 0;
+    const isDailyCompletedToday = totalDaily > 0 && completedDaily === totalDaily;
+
+    return NextResponse.json({
+      quests: questsWithStatus,
+      dailyStats: {
+        totalDaily,
+        completedDaily,
+        approvedDaily,
+        remainingDaily,
+        progressPercent,
+        isDailyCompletedToday,
+      },
+      streakInfo: {
+        streakCount: currentStreak,
+        bonusPercent,
+        lastStreakDate,
+        isStreakCompletedToday: isDailyCompletedToday,
+      },
+    });
   } catch (error) {
     console.error("Lỗi lấy danh sách quest:", error);
     return NextResponse.json({ error: "Lỗi nạp nhiệm vụ đường" }, { status: 500 });
@@ -85,7 +154,7 @@ export async function POST(request: Request) {
         description: description.trim(),
         category: category || "DAILY",
         expReward: Number(expReward) || 30,
-        stoneReward: Number(stoneReward) || 8,
+        stoneReward: Number(stoneReward) || 15,
         difficulty: difficulty || "Trung bình",
         minRealmLevel: Number(minRealmLevel) || 0,
         icon: category === "BREAKTHROUGH" ? "zap" : category === "CHALLENGE" ? "sword" : "scroll",
