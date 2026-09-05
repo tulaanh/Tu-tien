@@ -1,0 +1,194 @@
+"use client";
+
+import { useState } from "react";
+import { useCultivator } from "@/lib/cultivatorContext";
+import { getRealmByLevel, REALMS } from "@/lib/cultivation";
+import { 
+  Zap, 
+  Gem, 
+  Flame, 
+  AlertTriangle, 
+  ChevronRight,
+  Sparkles,
+  Swords
+} from "lucide-react";
+import Link from "next/link";
+
+export default function CultivationCard() {
+  const { cultivator, breakthrough } = useCultivator();
+  const [breakingThrough, setBreakingThrough] = useState(false);
+  const [breakthroughResult, setBreakthroughResult] = useState<string | null>(null);
+
+  if (!cultivator) return null;
+
+  const realmInfo = cultivator.realmInfo || getRealmByLevel(cultivator.realmLevel);
+  const nextRealm = cultivator.realmLevel < REALMS.length - 1 ? getRealmByLevel(cultivator.realmLevel + 1) : null;
+  
+  const expPercentage = Math.min(
+    100,
+    Math.round((cultivator.currentExp / cultivator.maxExp) * 100)
+  );
+
+  const handleBreakthrough = async () => {
+    setBreakingThrough(true);
+    setBreakthroughResult(null);
+    const res = await breakthrough();
+    setBreakingThrough(false);
+    if (res.message) {
+      setBreakthroughResult(res.message);
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl xianxia-card p-4 sm:p-6 md:p-8 border border-amber-500/30">
+      {/* Background celestial glow */}
+      <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 sm:w-64 h-48 sm:h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 sm:w-64 h-48 sm:h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {breakthroughResult && (
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-amber-950/70 border border-amber-500/50 text-amber-200 text-xs sm:text-sm flex items-start space-x-2.5 animate-fade-in">
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold">{breakthroughResult}</p>
+          </div>
+          <button 
+            onClick={() => setBreakthroughResult(null)}
+            className="text-xs text-amber-400/80 hover:text-amber-200 ml-2"
+          >
+            Đóng
+          </button>
+        </div>
+      )}
+
+      {/* Header Info */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+        {/* Left: Avatar & Info */}
+        <div className="flex items-center space-x-3.5 sm:space-x-5 w-full sm:w-auto">
+          <div className="relative group shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-tr from-slate-950 via-slate-900 to-amber-950/80 border-2 border-amber-500/40 p-1 flex items-center justify-center shadow-lg shadow-amber-950/40">
+              <div className="w-full h-full rounded-xl bg-gradient-to-b from-amber-500/20 to-emerald-500/10 flex items-center justify-center">
+                <Swords className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-amber-400 filter drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+              </div>
+            </div>
+            <div className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.2 rounded-full bg-slate-900 border border-amber-500/40 text-[9px] sm:text-[10px] font-bold text-amber-300">
+              Lv.{cultivator.realmLevel}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-500 truncate">
+                {cultivator.name}
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+                {realmInfo.subStage || "Tiên Lộ"}
+              </span>
+            </div>
+
+            <p className="text-slate-300 text-xs sm:text-sm mt-0.5 font-medium flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="text-slate-400">Cảnh giới:</span>
+              <strong className="text-amber-300">{cultivator.realm}</strong>
+            </p>
+
+            <p className="text-[11px] sm:text-xs text-slate-400 italic mt-0.5 line-clamp-1">
+              &quot;{cultivator.bio || realmInfo.description}&quot;
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Spirit Stones Card on Mobile & Desktop */}
+        <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
+          <div className="flex items-center space-x-2 bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-3.5 py-1.5 sm:px-4 sm:py-2">
+            <Gem className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse" />
+            <div>
+              <p className="text-[9px] sm:text-[10px] text-emerald-300/70 font-medium uppercase tracking-wider">
+                Linh Thạch
+              </p>
+              <p className="text-base sm:text-xl font-bold text-emerald-300">
+                {cultivator.spiritStones.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/shop"
+            className="sm:hidden flex items-center space-x-1 text-xs text-amber-400/90 font-medium hover:text-amber-300"
+          >
+            <span>Đổi quà</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Progress Bar: Tu Vi */}
+      <div className="mt-5 sm:mt-7 space-y-1.5 sm:space-y-2">
+        <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold">
+          <div className="flex items-center space-x-1 text-slate-300">
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
+            <span>Tu Vi:</span>
+            <span className="text-amber-300 font-mono">
+              {cultivator.currentExp} / {cultivator.maxExp}
+            </span>
+          </div>
+
+          <div className="text-slate-400 text-[10px] sm:text-xs truncate max-w-[150px] sm:max-w-none text-right">
+            {nextRealm ? (
+              <span>Kế tiếp: <strong className="text-slate-200">{nextRealm.name}</strong></span>
+            ) : (
+              <span className="text-amber-400">Đỉnh Phong Vô Thượng</span>
+            )}
+          </div>
+        </div>
+
+        {/* Bar */}
+        <div className="relative h-3 sm:h-4 w-full rounded-full bg-slate-950/90 border border-slate-700/60 p-0.5 overflow-hidden">
+          <div
+            className={`h-full rounded-full bg-gradient-to-r ${realmInfo.color} transition-all duration-500 relative`}
+            style={{ width: `${expPercentage}%` }}
+          >
+            <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+          </div>
+        </div>
+        <div className="text-right text-[10px] sm:text-[11px] text-slate-400 font-mono">
+          {expPercentage}%
+        </div>
+      </div>
+
+      {/* Bottleneck Alert & Breakthrough Action */}
+      {cultivator.isBottleneck ? (
+        <div className="mt-4 sm:mt-6 p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/60 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 animate-pulse">
+          <div className="flex items-center space-x-2.5 text-amber-300 w-full sm:w-auto">
+            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 shrink-0" />
+            <div>
+              <h4 className="font-bold text-xs sm:text-sm text-amber-200">
+                ĐẠT ĐỈNH PHONG BÌNH CẢNH!
+              </h4>
+              <p className="text-[10px] sm:text-xs text-amber-300/80">
+                Tu vi đã đầy 100%! Đột phá ngay để phi thăng.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleBreakthrough}
+            disabled={breakingThrough}
+            className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 text-slate-950 hover:from-amber-300 hover:to-yellow-400 shadow-lg shadow-amber-500/30 disabled:opacity-50 transition transform active:scale-95 whitespace-nowrap flex items-center justify-center gap-1.5"
+          >
+            {breakingThrough ? "Đang vượt kiếp..." : "⚡ ĐỘT PHÁ CẢNH GIỚI"}
+          </button>
+        </div>
+      ) : expPercentage >= 100 ? (
+        <div className="mt-4 sm:mt-6 text-center">
+          <button
+            onClick={handleBreakthrough}
+            disabled={breakingThrough}
+            className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20 active:scale-95 transition"
+          >
+            {breakingThrough ? "Đang độ kiếp..." : "⚡ Đột Phá Cảnh Giới"}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}

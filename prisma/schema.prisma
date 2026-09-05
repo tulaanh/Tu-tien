@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Cultivator {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  pin          String   
+  realm        String   @default("Phàm Nhân")
+  realmLevel   Int      @default(0)
+  currentExp   Int      @default(0)
+  maxExp       Int      @default(100)
+  spiritStones Int      @default(0)
+  isBottleneck Boolean  @default(false)
+  avatar       String   @default("sword")
+  bio          String?  @default("Hành trình cầu trường sinh bắt đầu từ bước chân đầu tiên.")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  completions QuestCompletion[]
+  redemptions Redemption[]
+}
+
+model Quest {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  category      String   @default("DAILY") // DAILY, CHALLENGE, BREAKTHROUGH
+  minRealmLevel Int      @default(0)
+  expReward     Int      @default(20)
+  stoneReward   Int      @default(10)
+  difficulty    String   @default("Dễ")
+  icon          String   @default("scroll")
+  isArchived    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  completions QuestCompletion[]
+}
+
+model QuestCompletion {
+  id           String     @id @default(cuid())
+  cultivatorId String
+  questId      String
+  completedAt  DateTime   @default(now())
+
+  cultivator   Cultivator @relation(fields: [cultivatorId], references: [id], onDelete: Cascade)
+  quest        Quest      @relation(fields: [questId], references: [id], onDelete: Cascade)
+}
+
+model Reward {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    String       @default("REAL_LIFE") // REAL_LIFE, PILL
+  cost        Int          @default(50)
+  stock       Int          @default(-1)
+  icon        String       @default("gift")
+  isArchived  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  redemptions Redemption[]
+}
+
+model Redemption {
+  id           String     @id @default(cuid())
+  cultivatorId String
+  rewardId     String
+  cost         Int
+  status       String     @default("APPROVED")
+  createdAt    DateTime   @default(now())
+
+  cultivator   Cultivator @relation(fields: [cultivatorId], references: [id], onDelete: Cascade)
+  reward       Reward     @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+}
