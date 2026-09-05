@@ -30,6 +30,8 @@ interface QuestItem {
   stoneReward: number;
   difficulty: string;
   isCompleted?: boolean;
+  isPending?: boolean;
+  isRejected?: boolean;
 }
 
 interface RewardItem {
@@ -134,18 +136,17 @@ export default function HomePage() {
       const data = await res.json();
       if (res.ok) {
         setToastMessage(data.message);
-        await refresh();
         await fetchData();
 
         try {
           confetti({
-            particleCount: 50,
-            spread: 60,
+            particleCount: 40,
+            spread: 50,
             origin: { y: 0.7 },
           });
         } catch (err) {}
       } else {
-        setToastMessage(data.error || "Không thể nhận thưởng");
+        setToastMessage(data.error || "Không thể gửi báo cáo");
       }
     } catch (e) {
       setToastMessage("Lỗi kết nối máy chủ");
@@ -312,13 +313,26 @@ export default function HomePage() {
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Đã Xong</span>
                       </span>
+                    ) : quest.isPending ? (
+                      <span className="inline-flex items-center space-x-1 text-xs font-bold text-amber-300 bg-amber-950/60 px-2.5 py-1 rounded-lg border border-amber-500/30 animate-pulse">
+                        <Clock className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Chờ Duyệt</span>
+                      </span>
                     ) : (
                       <button
                         onClick={() => handleCompleteQuest(quest.id)}
                         disabled={completingId === quest.id}
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500 hover:text-slate-950 transition active:scale-95"
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
+                          quest.isRejected
+                            ? "bg-rose-950/80 text-rose-300 border border-rose-500/40 hover:bg-rose-900"
+                            : "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500 hover:text-slate-950"
+                        }`}
                       >
-                        {completingId === quest.id ? "Đang nhận..." : "Hoàn Thành"}
+                        {completingId === quest.id
+                          ? "Đang gửi..."
+                          : quest.isRejected
+                          ? "Nộp Lại"
+                          : "Báo Cáo Xong"}
                       </button>
                     )}
                   </div>

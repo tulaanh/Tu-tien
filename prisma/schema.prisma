@@ -47,7 +47,10 @@ model QuestCompletion {
   id           String     @id @default(cuid())
   cultivatorId String
   questId      String
-  completedAt  DateTime   @default(now())
+  status       String     @default("PENDING") // PENDING, APPROVED, REJECTED
+  note         String?    // Báo cáo / Minh chứng tu luyện từ đạo hữu
+  createdAt    DateTime   @default(now())
+  completedAt  DateTime?
 
   cultivator   Cultivator @relation(fields: [cultivatorId], references: [id], onDelete: Cascade)
   quest        Quest      @relation(fields: [questId], references: [id], onDelete: Cascade)

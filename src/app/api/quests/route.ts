@@ -15,26 +15,46 @@ export async function GET(request: Request) {
       return NextResponse.json({ quests });
     }
 
-    // Kiểm tra lịch sử hoàn thành
+    // Kiểm tra lịch sử nộp và duyệt nhiệm vụ
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const completions = await prisma.questCompletion.findMany({
       where: { cultivatorId },
+      orderBy: { createdAt: "desc" },
     });
 
     const questsWithStatus = quests.map((q) => {
-      const isCompletedToday = completions.some((c) => {
-        if (c.questId !== q.id) return false;
+      const relevantCompletions = completions.filter((c) => c.questId === q.id);
+
+      // 1. Kiểm tra xem có đơn đang Chờ Duyệt (PENDING) không
+      const hasPending = relevantCompletions.some((c) => c.status === "PENDING");
+
+      // 2. Kiểm tra xem ĐÃ DUYỆT (APPROVED) chưa
+      const isApproved = relevantCompletions.some((c) => {
+        if (c.status !== "APPROVED") return false;
         if (q.category === "DAILY") {
-          return new Date(c.completedAt) >= today;
+          const compDate = c.completedAt ? new Date(c.completedAt) : new Date(c.createdAt);
+          return compDate >= today;
         }
-        return true; // Với Challenge hoặc Breakthrough đã hoàn thành
+        return true;
       });
+
+      // 3. Kiểm tra Bị bác bỏ (REJECTED) gần nhất
+      const latest = relevantCompletions[0];
+      const isRejected = !hasPending && !isApproved && latest && latest.status === "REJECTED";
+
+      let submissionStatus: "PENDING" | "APPROVED" | "REJECTED" | null = null;
+      if (hasPending) submissionStatus = "PENDING";
+      else if (isApproved) submissionStatus = "APPROVED";
+      else if (isRejected) submissionStatus = "REJECTED";
 
       return {
         ...q,
-        isCompleted: isCompletedToday,
+        isCompleted: isApproved,
+        isPending: hasPending,
+        isRejected,
+        submissionStatus,
       };
     });
 

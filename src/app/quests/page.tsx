@@ -28,6 +28,9 @@ interface Quest {
   difficulty: string;
   icon: string;
   isCompleted?: boolean;
+  isPending?: boolean;
+  isRejected?: boolean;
+  submissionStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
 }
 
 export default function QuestsPage() {
@@ -37,6 +40,11 @@ export default function QuestsPage() {
   const [activeTab, setActiveTab] = useState<"ALL" | "DAILY" | "CHALLENGE" | "BREAKTHROUGH">("ALL");
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Modal nộp báo cáo nhiệm vụ
+  const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
+  const [reportNote, setReportNote] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   const fetchQuests = async () => {
     try {
@@ -57,12 +65,11 @@ export default function QuestsPage() {
     fetchQuests();
   }, [cultivator?.id]);
 
-  const handleComplete = async (quest: Quest) => {
+  const openSubmitModal = (quest: Quest) => {
     if (!cultivator) {
       setFeedback({ type: "error", message: "Vui lòng đăng nhập Đạo Hiệu trước khi nhận thưởng!" });
       return;
     }
-
     if (cultivator.realmLevel < quest.minRealmLevel) {
       setFeedback({
         type: "error",
@@ -70,8 +77,15 @@ export default function QuestsPage() {
       });
       return;
     }
+    setSelectedQuest(quest);
+    setReportNote("");
+  };
 
-    setCompletingId(quest.id);
+  const handleSubmitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedQuest || !cultivator) return;
+
+    setSubmittingReport(true);
     setFeedback(null);
 
     try {
@@ -80,31 +94,33 @@ export default function QuestsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cultivatorId: cultivator.id,
-          questId: quest.id,
+          questId: selectedQuest.id,
+          note: reportNote,
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
         setFeedback({ type: "success", message: data.message });
-        await refresh();
+        setSelectedQuest(null);
+        setReportNote("");
         await fetchQuests();
 
         try {
           confetti({
-            particleCount: 70,
-            spread: 70,
+            particleCount: 50,
+            spread: 60,
             origin: { y: 0.7 },
-            colors: ["#fbbf24", "#34d399", "#38bdf8"],
+            colors: ["#fbbf24", "#38bdf8"],
           });
         } catch (err) {}
       } else {
-        setFeedback({ type: "error", message: data.error || "Không thể hoàn thành nhiệm vụ" });
+        setFeedback({ type: "error", message: data.error || "Không thể nộp báo cáo nhiệm vụ" });
       }
     } catch (e) {
       setFeedback({ type: "error", message: "Lỗi kết nối máy chủ" });
     } finally {
-      setCompletingId(null);
+      setSubmittingReport(false);
     }
   };
 
@@ -290,17 +306,25 @@ export default function QuestsPage() {
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Đã Hoàn Thành</span>
                       </div>
+                    ) : quest.isPending ? (
+                      <div className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 text-xs font-bold text-amber-300 bg-amber-950/50 border border-amber-500/40 px-3 py-2 sm:py-1.5 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-pulse">
+                        <Clock className="w-4 h-4 text-amber-400" />
+                        <span>Chờ Trưởng Lão Duyệt</span>
+                      </div>
                     ) : !meetsRealm ? (
                       <div className="text-xs text-rose-400/80 font-medium italic text-center sm:text-left py-1">
                         Cảnh giới chưa đủ
                       </div>
                     ) : (
                       <button
-                        onClick={() => handleComplete(quest)}
-                        disabled={completingId === quest.id}
-                        className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 sm:py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95 transition disabled:opacity-50 flex items-center justify-center"
+                        onClick={() => openSubmitModal(quest)}
+                        className={`w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 sm:py-1.5 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center ${
+                          quest.isRejected
+                            ? "bg-rose-950/80 border border-rose-500/40 text-rose-300 hover:bg-rose-900"
+                            : "bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 hover:brightness-110 shadow-md shadow-amber-500/20"
+                        }`}
                       >
-                        {completingId === quest.id ? "Đang ghi nhận..." : "Hoàn Thành & Nhận Thưởng"}
+                        {quest.isRejected ? "Nộp Lại Báo Cáo" : "Báo Cáo Hoàn Thành"}
                       </button>
                     )}
                   </div>
@@ -308,6 +332,67 @@ export default function QuestsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modal Nộp Báo Cáo Nhiệm Vụ */}
+      {selectedQuest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="relative w-full max-w-sm sm:max-w-md p-5 sm:p-6 rounded-2xl bg-[#0e1622] border border-amber-500/30 shadow-2xl">
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Scroll className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-amber-300">
+                Báo Cáo Hoàn Thành Nhiệm Vụ
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Gửi báo cáo lên Trưởng Lão để thẩm định và ban phát Tu Vi, Linh Thạch.
+              </p>
+            </div>
+
+            {/* Quest Preview */}
+            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 mb-4">
+              <h4 className="font-bold text-slate-200 text-sm">{selectedQuest.title}</h4>
+              <p className="text-xs text-slate-400 mt-1">{selectedQuest.description}</p>
+              <div className="flex items-center space-x-3 text-xs mt-2.5 pt-2 border-t border-slate-800 font-semibold">
+                <span className="text-amber-400">+{selectedQuest.expReward} Tu Vi</span>
+                <span className="text-emerald-400">+{selectedQuest.stoneReward} Linh Thạch</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitReport} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Ghi chú / Minh chứng tu luyện (Tùy chọn)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Ví dụ: Đã hoàn thành 30 phút chạy bộ sáng nay / Đã chụp ảnh em gái mặc đồng phục..."
+                  value={reportNote}
+                  onChange={(e) => setReportNote(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex space-x-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedQuest(null)}
+                  className="flex-1 py-2.5 px-3 rounded-xl text-xs font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 active:scale-95 transition"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingReport}
+                  className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50 transition"
+                >
+                  {submittingReport ? "Đang gửi..." : "Gửi Phê Duyệt"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

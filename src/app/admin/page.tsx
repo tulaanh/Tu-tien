@@ -16,7 +16,10 @@ import {
   Users,
   Lock,
   Zap,
-  Gem
+  Gem,
+  Clock,
+  X,
+  MessageSquare
 } from "lucide-react";
 
 interface Quest {
@@ -54,6 +57,28 @@ interface RedemptionItem {
   createdAt: string;
 }
 
+interface SubmissionItem {
+  id: string;
+  cultivator: {
+    id: string;
+    name: string;
+    realm: string;
+    spiritStones: number;
+    avatar: string;
+  };
+  quest: {
+    id: string;
+    title: string;
+    category: string;
+    expReward: number;
+    stoneReward: number;
+  };
+  status: string;
+  note: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
 export default function AdminPage() {
   const [adminPin, setAdminPin] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,12 +93,15 @@ export default function AdminPage() {
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState<"QUESTS" | "REWARDS" | "REDEMPTIONS">("QUESTS");
+  const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "QUESTS" | "REWARDS" | "REDEMPTIONS">("SUBMISSIONS");
 
   // Data states
   const [quests, setQuests] = useState<Quest[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [redemptions, setRedemptions] = useState<RedemptionItem[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionItem[]>([]);
+  const [submissionFilter, setSubmissionFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING");
+  const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -144,10 +172,11 @@ export default function AdminPage() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [qRes, rRes, redRes] = await Promise.all([
+      const [qRes, rRes, redRes, subRes] = await Promise.all([
         fetch("/api/quests"),
         fetch("/api/rewards"),
         fetch("/api/admin/redemptions"),
+        fetch("/api/admin/submissions"),
       ]);
 
       if (qRes.ok) {
@@ -162,10 +191,38 @@ export default function AdminPage() {
         const redData = await redRes.json();
         setRedemptions(redData.redemptions || []);
       }
+      if (subRes.ok) {
+        const subData = await subRes.json();
+        setSubmissions(subData.submissions || []);
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Submissions Actions
+  const handleSubmissionAction = async (id: string, action: "APPROVE" | "REJECT" | "DELETE") => {
+    if (action === "DELETE" && !confirm("Đạo hữu có chắc muốn xóa bản ghi báo cáo này?")) return;
+    setProcessingSubmissionId(id);
+    try {
+      const res = await fetch("/api/admin/submissions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ type: "success", message: data.message || "Thao tác thành công!" });
+        fetchAdminData();
+      } else {
+        setToast({ type: "error", message: data.error || "Thao tác thất bại" });
+      }
+    } catch (e) {
+      setToast({ type: "error", message: "Lỗi kết nối máy chủ" });
+    } finally {
+      setProcessingSubmissionId(null);
     }
   };
 
@@ -457,10 +514,27 @@ export default function AdminPage() {
       )}
 
       {/* Admin Tabs */}
-      <div className="flex items-center space-x-2 border-b border-slate-800 pb-2">
+      <div className="flex items-center space-x-2 border-b border-slate-800 pb-2 overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab("SUBMISSIONS")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap ${
+            activeTab === "SUBMISSIONS"
+              ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>Duyệt Nhiệm Vụ</span>
+          {submissions.filter((s) => s.status === "PENDING").length > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-400 text-slate-950 font-black animate-pulse shadow">
+              {submissions.filter((s) => s.status === "PENDING").length}
+            </span>
+          )}
+        </button>
+
         <button
           onClick={() => setActiveTab("QUESTS")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap ${
             activeTab === "QUESTS"
               ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
               : "text-slate-400 hover:text-slate-200"
@@ -472,7 +546,7 @@ export default function AdminPage() {
 
         <button
           onClick={() => setActiveTab("REWARDS")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap ${
             activeTab === "REWARDS"
               ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
               : "text-slate-400 hover:text-slate-200"
@@ -484,7 +558,7 @@ export default function AdminPage() {
 
         <button
           onClick={() => setActiveTab("REDEMPTIONS")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap ${
             activeTab === "REDEMPTIONS"
               ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
               : "text-slate-400 hover:text-slate-200"
@@ -494,6 +568,178 @@ export default function AdminPage() {
           <span>Duyệt Đổi Quà ({redemptions.length})</span>
         </button>
       </div>
+
+      {/* TAB 0: DUYỆT BÁO CÁO NHIỆM VỤ */}
+      {activeTab === "SUBMISSIONS" && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-200">
+                Thẩm Định Báo Cáo Hoàn Thành Nhiệm Vụ
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Xem xét minh chứng và phê duyệt để ban thưởng Tu Vi & Linh Thạch cho Đạo Hữu.
+              </p>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center space-x-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+              {[
+                { id: "ALL", label: "Tất cả" },
+                { id: "PENDING", label: `Chờ duyệt (${submissions.filter((s) => s.status === "PENDING").length})` },
+                { id: "APPROVED", label: "Đã duyệt" },
+                { id: "REJECTED", label: "Đã bác bỏ" },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setSubmissionFilter(f.id as any)}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                    submissionFilter === f.id
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Submissions List */}
+          {submissions.filter((s) => submissionFilter === "ALL" || s.status === submissionFilter).length === 0 ? (
+            <div className="text-center py-12 xianxia-card rounded-2xl border border-slate-800 p-6">
+              <Clock className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-300">Không có báo cáo nào trong mục này</p>
+              <p className="text-xs text-slate-500 mt-1">
+                Khi Đạo Hữu bấm hoàn thành nhiệm vụ, báo cáo sẽ hiện tại đây để bạn phê chuẩn!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {submissions
+                .filter((s) => submissionFilter === "ALL" || s.status === submissionFilter)
+                .map((sub) => {
+                  const isPending = sub.status === "PENDING";
+                  const isApproved = sub.status === "APPROVED";
+                  const isRejected = sub.status === "REJECTED";
+
+                  return (
+                    <div
+                      key={sub.id}
+                      className={`p-4 sm:p-5 rounded-2xl border transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                        isPending
+                          ? "xianxia-card border-amber-500/40 bg-amber-950/10 shadow-[0_0_15px_rgba(245,158,11,0.08)]"
+                          : isApproved
+                          ? "bg-slate-900/40 border-slate-800 opacity-80"
+                          : "bg-rose-950/20 border-rose-500/20 opacity-75"
+                      }`}
+                    >
+                      <div className="space-y-2 flex-1">
+                        {/* Header: Cultivator + Time */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-slate-100 text-sm sm:text-base">
+                            {sub.cultivator?.name || "Đạo Hữu Vô Danh"}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                            {sub.cultivator?.realm || "Phàm Nhân"}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono ml-auto md:ml-0">
+                            {new Date(sub.createdAt).toLocaleString("vi-VN")}
+                          </span>
+                        </div>
+
+                        {/* Quest info */}
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="font-semibold text-amber-300">
+                            📜 {sub.quest?.title || "Nhiệm vụ"}
+                          </span>
+                          <span className="text-amber-400 font-bold flex items-center gap-1">
+                            <Zap className="w-3.5 h-3.5" /> +{sub.quest?.expReward || 0} Tu Vi
+                          </span>
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <Gem className="w-3.5 h-3.5" /> +{sub.quest?.stoneReward || 0} Linh Thạch
+                          </span>
+                        </div>
+
+                        {/* Note from user */}
+                        {sub.note && (
+                          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-slate-300 flex items-start gap-2">
+                            <MessageSquare className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-[10px] font-bold text-amber-400/80 uppercase block">
+                                Minh chứng tu luyện:
+                              </span>
+                              <p className="mt-0.5 italic text-slate-200">{sub.note}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Status & Actions */}
+                      <div className="flex items-center space-x-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+                        {isPending ? (
+                          <>
+                            <button
+                              onClick={() => handleSubmissionAction(sub.id, "REJECT")}
+                              disabled={processingSubmissionId === sub.id}
+                              className="px-3 py-2 rounded-xl text-xs font-semibold bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 border border-rose-500/30 transition disabled:opacity-50"
+                            >
+                              Bác Bỏ
+                            </button>
+
+                            <button
+                              onClick={() => handleSubmissionAction(sub.id, "APPROVE")}
+                              disabled={processingSubmissionId === sub.id}
+                              className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:brightness-110 shadow-md shadow-emerald-500/20 transition active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              <Check className="w-4 h-4" />
+                              <span>Phê Chuẩn (Duyệt)</span>
+                            </button>
+                          </>
+                        ) : isApproved ? (
+                          <div className="flex items-center space-x-2">
+                            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Đã Phê Chuẩn</span>
+                            </span>
+                            <button
+                              onClick={() => handleSubmissionAction(sub.id, "DELETE")}
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition"
+                              title="Xóa bản ghi"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-950/60 text-rose-400 border border-rose-500/30 flex items-center gap-1">
+                              <X className="w-3.5 h-3.5" />
+                              <span>Đã Bác Bỏ</span>
+                            </span>
+                            <button
+                              onClick={() => handleSubmissionAction(sub.id, "APPROVE")}
+                              disabled={processingSubmissionId === sub.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-amber-300 hover:bg-slate-700 transition"
+                            >
+                              Duyệt Lại
+                            </button>
+                            <button
+                              onClick={() => handleSubmissionAction(sub.id, "DELETE")}
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition"
+                              title="Xóa bản ghi"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* TAB 1: Quản lý Nhiệm vụ */}
       {activeTab === "QUESTS" && (
