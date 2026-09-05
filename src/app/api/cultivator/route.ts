@@ -94,7 +94,7 @@ export async function POST(request: Request) {
           realmLevel: 0,
           currentExp: 0,
           maxExp: initialRealm.maxExp,
-          spiritStones: 50, // Tặng 50 linh thạch tân thủ
+          spiritStones: 0, // Khởi đầu từ 0 linh thạch, tích lũy qua làm nhiệm vụ
           avatar: avatar || "sword",
           bio: bio || "Phàm thai nhập đạo, nghịch thiên cải mệnh.",
         },
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
           realmLevel: 0,
           currentExp: 0,
           maxExp: initialRealm.maxExp,
-          spiritStones: 20,
+          spiritStones: 0,
           avatar: avatar || "sword",
           bio: bio || "Phàm thai nhập đạo, nghịch thiên cải mệnh.",
         },
