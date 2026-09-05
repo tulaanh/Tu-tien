@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCultivator } from "@/lib/cultivatorContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Sparkles, 
   Scroll, 
