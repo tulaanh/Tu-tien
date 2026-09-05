@@ -59,6 +59,14 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isLocalhost, setIsLocalhost] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      setIsLocalhost(host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0");
+    }
+  }, []);
 
   const [activeTab, setActiveTab] = useState<"QUESTS" | "REWARDS" | "REDEMPTIONS">("QUESTS");
 
@@ -307,6 +315,33 @@ export default function AdminPage() {
       setToast({ type: "error", message: "Lỗi cập nhật trạng thái" });
     }
   };
+
+  // If accessing from public internet / not localhost
+  if (!isLocalhost) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center">
+        <div className="p-8 rounded-3xl xianxia-card border border-rose-500/40 shadow-2xl">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold text-rose-300">
+            Cấm Địa Tông Môn (Bản Địa Chỉ Giới)
+          </h1>
+          <p className="text-xs text-slate-300 mt-2.5 leading-relaxed">
+            Khu vực Quản Trị Tông Môn chỉ có thể mở trực tiếp từ máy tính Chưởng Môn (chạy trên <strong>Localhost</strong>: <span className="text-amber-300">http://localhost:3000</span>) để bảo vệ an toàn tối cao cho Tông Môn!
+          </p>
+          <div className="mt-6">
+            <a
+              href="/"
+              className="inline-block px-5 py-2.5 rounded-xl font-bold text-xs bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 transition"
+            >
+              Quay Về Động Phủ
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // If not authenticated as admin yet
   if (!isAuthenticated) {

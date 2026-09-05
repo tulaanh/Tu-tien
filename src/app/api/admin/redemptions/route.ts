@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const host = request.headers.get("host") || "";
+    const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("0.0.0.0");
+    if (!isLocalhost && process.env.ALLOW_REMOTE_ADMIN !== "true") {
+      return NextResponse.json({ error: "Chỉ cho phép truy cập từ Localhost" }, { status: 403 });
+    }
+
     const redemptions = await prisma.redemption.findMany({
       orderBy: { createdAt: "desc" },
       include: {

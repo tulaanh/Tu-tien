@@ -41,12 +41,23 @@ export default function Navbar() {
     }
   };
 
+  const [isLocalhost, setIsLocalhost] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      setIsLocalhost(host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0");
+    }
+  }, []);
+
   const navItems = [
     { label: "Động Phủ", mobileLabel: "Động Phủ", href: "/", icon: Flame },
     { label: "Nhiệm Vụ Đường", mobileLabel: "Nhiệm Vụ", href: "/quests", icon: Scroll },
     { label: "Tàng Bảo Các", mobileLabel: "Tàng Bảo", href: "/shop", icon: Gift },
     { label: "Bảng Phong Thần", mobileLabel: "Phong Thần", href: "/leaderboard", icon: Trophy },
-    { label: "Quản Trị", mobileLabel: "Quản Trị", href: "/admin", icon: ShieldAlert },
+    ...(isLocalhost
+      ? [{ label: "Quản Trị", mobileLabel: "Quản Trị", href: "/admin", icon: ShieldAlert }]
+      : []),
   ];
 
   return (
@@ -135,7 +146,7 @@ export default function Navbar() {
 
       {/* Mobile Fixed Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#090e15]/95 backdrop-blur-xl border-t border-amber-900/40 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.6)]">
-        <div className="grid grid-cols-5 gap-1">
+        <div className={`grid ${navItems.length === 5 ? "grid-cols-5" : "grid-cols-4"} gap-1`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
