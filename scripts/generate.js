@@ -1,7 +1,7 @@
 const { execSync } = require("child_process");
 
 // Đảm bảo DATABASE_URL luôn có giá trị hợp lệ khi build trên Vercel
-process.env.DATABASE_URL = process.env.DATABASE_URL || "file:./dev.db";
+process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_fpRFJmG90XwK@ep-rapid-heart-b3ibss0q-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 try {
   console.log("⚡ Đang tạo Prisma Client với DATABASE_URL:", process.env.DATABASE_URL);
