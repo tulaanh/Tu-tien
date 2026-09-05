@@ -3,7 +3,9 @@
 import { useCultivator } from "@/lib/cultivatorContext";
 import CultivationCard from "@/components/CultivationCard";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   Scroll, 
   Gift, 
@@ -57,45 +59,18 @@ export default function HomePage() {
   const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Daily quests & Streak preview
-  const [dailyQuests, setDailyQuests] = useState<QuestItem[]>([]);
-  const [dailyStats, setDailyStats] = useState<any>(null);
-  const [streakInfo, setStreakInfo] = useState<any>(null);
-  const [rewards, setRewards] = useState<RewardItem[]>([]);
+  // SWR Caching for quests & rewards
+  const questsKey = cultivator?.id ? `/api/quests?cultivatorId=${cultivator.id}` : "/api/quests";
+  const { data: questsData, mutate: mutateQuests } = useSWR(questsKey, fetcher);
+  const { data: rewardsData } = useSWR("/api/rewards", fetcher);
+
+  const dailyQuests: QuestItem[] = (questsData?.quests || []).slice(0, 4);
+  const dailyStats = questsData?.dailyStats || null;
+  const streakInfo = questsData?.streakInfo || null;
+  const rewards: RewardItem[] = (rewardsData?.rewards || []).slice(0, 3);
+
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const fetchData = async () => {
-    try {
-      if (cultivator?.id) {
-        const qRes = await fetch(`/api/quests?cultivatorId=${cultivator.id}`);
-        if (qRes.ok) {
-          const data = await qRes.json();
-          setDailyQuests((data.quests || []).slice(0, 4));
-          if (data.dailyStats) setDailyStats(data.dailyStats);
-          if (data.streakInfo) setStreakInfo(data.streakInfo);
-        }
-      } else {
-        const qRes = await fetch("/api/quests");
-        if (qRes.ok) {
-          const data = await qRes.json();
-          setDailyQuests((data.quests || []).slice(0, 4));
-        }
-      }
-
-      const rRes = await fetch("/api/rewards");
-      if (rRes.ok) {
-        const data = await rRes.json();
-        setRewards((data.rewards || []).slice(0, 3));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [cultivator?.id]);
 
   const handleQuickLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +119,8 @@ export default function HomePage() {
       const data = await res.json();
       if (res.ok) {
         setToastMessage(data.message);
-        await fetchData();
+        await mutateQuests();
+        await refresh();
 
         try {
           confetti({

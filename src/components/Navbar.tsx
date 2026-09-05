@@ -90,7 +90,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 w-full border-b border-amber-900/30 bg-[#0a0f16]/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo Brand */}
-          <Link href="/" className="flex items-center space-x-2 group">
+          <Link href="/" prefetch={true} className="flex items-center space-x-2 group">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-700 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-200">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950 fill-slate-950" />
             </div>
@@ -113,6 +113,7 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
                     isActive
                       ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.15)]"
@@ -178,6 +179,7 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all active:scale-90 ${
                   isActive
                     ? "text-amber-400 bg-amber-500/10 font-bold"

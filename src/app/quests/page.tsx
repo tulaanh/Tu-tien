@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCultivator } from "@/lib/cultivatorContext";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   Scroll, 
   Zap, 
@@ -55,10 +57,14 @@ interface Quest {
 
 export default function QuestsPage() {
   const { cultivator, refresh } = useCultivator();
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [dailyStats, setDailyStats] = useState<DailyStats | null>(null);
-  const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const questsUrl = cultivator?.id ? `/api/quests?cultivatorId=${cultivator.id}` : "/api/quests";
+  const { data: questsData, isLoading, mutate: mutateQuests } = useSWR(questsUrl, fetcher);
+
+  const quests: Quest[] = questsData?.quests || [];
+  const dailyStats: DailyStats | null = questsData?.dailyStats || null;
+  const streakInfo: StreakInfo | null = questsData?.streakInfo || null;
+  const loading = isLoading && !questsData;
+
   const [activeTab, setActiveTab] = useState<"ALL" | "DAILY" | "CHALLENGE" | "BREAKTHROUGH">("ALL");
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -67,27 +73,6 @@ export default function QuestsPage() {
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [reportNote, setReportNote] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
-
-  const fetchQuests = async () => {
-    try {
-      const url = cultivator?.id ? `/api/quests?cultivatorId=${cultivator.id}` : "/api/quests";
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setQuests(data.quests || []);
-        if (data.dailyStats) setDailyStats(data.dailyStats);
-        if (data.streakInfo) setStreakInfo(data.streakInfo);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchQuests();
-  }, [cultivator?.id]);
 
   const openSubmitModal = (quest: Quest) => {
     if (!cultivator) {
@@ -128,7 +113,8 @@ export default function QuestsPage() {
         setFeedback({ type: "success", message: data.message });
         setSelectedQuest(null);
         setReportNote("");
-        await fetchQuests();
+        await mutateQuests();
+        await refresh();
 
         try {
           confetti({

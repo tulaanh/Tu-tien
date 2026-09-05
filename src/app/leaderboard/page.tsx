@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useCultivator } from "@/lib/cultivatorContext";
 import { RealmTier } from "@/lib/cultivation";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   Trophy, 
   Medal, 
@@ -30,26 +31,9 @@ interface CultivatorRank {
 
 export default function LeaderboardPage() {
   const { cultivator } = useCultivator();
-  const [leaderboard, setLeaderboard] = useState<CultivatorRank[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const res = await fetch("/api/leaderboard");
-        if (res.ok) {
-          const data = await res.json();
-          setLeaderboard(data.leaderboard || []);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeaderboard();
-  }, []);
+  const { data, isLoading } = useSWR("/api/leaderboard", fetcher);
+  const leaderboard: CultivatorRank[] = data?.leaderboard || [];
+  const loading = isLoading && !data;
 
   return (
     <div className="space-y-6 pb-12">

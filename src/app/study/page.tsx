@@ -1,7 +1,9 @@
 "use client";
 
 import { useCultivator } from "@/lib/cultivatorContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   GraduationCap, 
   Sparkles, 
@@ -48,14 +50,17 @@ const COMMON_SUBJECTS = [
 
 export default function StudyPage() {
   const { cultivator } = useCultivator();
-  const [reports, setReports] = useState<ExamReportItem[]>([]);
-  const [stats, setStats] = useState({
+  const studyKey = cultivator?.id ? `/api/study?cultivatorId=${cultivator.id}` : null;
+  const { data: studyData, isLoading, mutate: mutateReports } = useSWR(studyKey, fetcher);
+
+  const reports: ExamReportItem[] = studyData?.reports || [];
+  const stats = studyData?.stats || {
     totalReports: 0,
     approvedCount: 0,
     totalExpEarned: 0,
     totalStonesEarned: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  };
+  const loading = Boolean(cultivator?.id && isLoading && !studyData);
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -67,31 +72,6 @@ export default function StudyPage() {
 
   const numScore = parseFloat(score) || 0;
   const rewardEstimate = calculateExamReward(numScore, examType);
-
-  const fetchReports = async () => {
-    if (!cultivator?.id) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await fetch(`/api/study?cultivatorId=${cultivator.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setReports(data.reports || []);
-        if (data.stats) {
-          setStats(data.stats);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReports();
-  }, [cultivator?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +109,7 @@ export default function StudyPage() {
         setToastMessage(data.message || "Đã gửi báo cáo điểm thành công!");
         setSubject("");
         setNote("");
-        fetchReports();
+        mutateReports();
         confetti({
           particleCount: 60,
           spread: 70,

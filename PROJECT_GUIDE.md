@@ -1,4 +1,4 @@
-﻿# 📖 TÀI LIỆU DỰ ÁN VẤN ĐẠO CÁC (AI & DEVELOPER HANDBOOK)
+# 📖 TÀI LIỆU DỰ ÁN VẤN ĐẠO CÁC (AI & DEVELOPER HANDBOOK)
 
 Tài liệu này tổng hợp toàn bộ bối cảnh kiến trúc, quy tắc nghiệp vụ, công thức tính toán và lưu ý vận hành của dự án **Vấn Đạo Các** để các AI Agent và Developer ở các phiên làm việc tiếp theo có thể nắm bắt và tiếp tục phát triển dự án một cách chính xác nhất.
 
@@ -23,6 +23,18 @@ Tài liệu này tổng hợp toàn bộ bối cảnh kiến trúc, quy tắc ng
   ```powershell
   Get-Process -Name node, next -ErrorAction SilentlyContinue | Stop-Process -Force
   ```
+
+### 1.3. Cơ Chế Caching Client-Side & Tối Ưu Chuyển Tab (SWR)
+- **Thư viện**: `swr` kết hợp `src/lib/fetcher.ts`
+- **Cơ chế Stale-While-Revalidate**:
+  - Khi chuyển qua lại giữa các tab (Động Phủ `/`, Nhiệm Vụ `/quests`, Tu Luyện `/study`, Tàng Bảo Các `/shop`, Bảng Phong Thần `/leaderboard`), dữ liệu được hiển thị **ngay lập tức từ cache** mà không bị giật hay spinner loading.
+  - SWR tự động revalidate ngầm và deduplicate request (ví dụ: danh sách `/api/quests` được dùng chung giữa `/` và `/quests`, `/api/rewards` giữa `/` và `/shop`).
+- **Làm mới dữ liệu (Mutate)**:
+  - Khi người dùng nộp nhiệm vụ, đổi quà hoặc gửi điểm thi: gọi hàm `mutate()` tương ứng để cập nhật cache tức thì.
+- **Route Loading Skeletons (`loading.tsx`)**:
+  - Tất cả các trang đều có file `loading.tsx` skeleton đồng bộ phong cách xianxia để Next.js App Router render tức thì.
+- **Next.js Link Prefetch**:
+  - Tất cả các link trên Navbar đều có `prefetch={true}` để Next.js nạp trước route chunks.
 
 ---
 

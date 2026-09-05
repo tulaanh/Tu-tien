@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCultivator } from "@/lib/cultivatorContext";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   Gift, 
   Gem, 
@@ -42,8 +44,10 @@ interface RedemptionLog {
 
 export default function ShopPage() {
   const { cultivator, refresh } = useCultivator();
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rewardsData, isLoading, mutate: mutateRewards } = useSWR("/api/rewards", fetcher);
+  const rewards: Reward[] = rewardsData?.rewards || [];
+  const loading = isLoading && !rewardsData;
+
   const [activeCategory, setActiveCategory] = useState<"ALL" | "REAL_LIFE" | "PILL">("ALL");
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -53,24 +57,6 @@ export default function ShopPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<RedemptionLog[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-
-  const fetchRewards = async () => {
-    try {
-      const res = await fetch("/api/rewards");
-      if (res.ok) {
-        const data = await res.json();
-        setRewards(data.rewards || []);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRewards();
-  }, []);
 
   const openHistory = async () => {
     setShowHistory(true);
@@ -118,7 +104,7 @@ export default function ShopPage() {
       if (res.ok) {
         setFeedback({ type: "success", message: data.message });
         await refresh();
-        await fetchRewards();
+        await mutateRewards();
 
         try {
           confetti({
