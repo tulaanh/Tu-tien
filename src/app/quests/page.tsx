@@ -121,7 +121,7 @@ export default function QuestsPage() {
             particleCount: 50,
             spread: 60,
             origin: { y: 0.7 },
-            colors: ["#fbbf24", "#38bdf8"],
+            colors: ["#3b82f6", "#38bdf8"],
           });
         } catch (err) {}
       } else {
@@ -142,45 +142,45 @@ export default function QuestsPage() {
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
       case "Dễ":
-        return "bg-emerald-950/60 text-emerald-300 border-emerald-500/30";
+        return "bg-emerald-50 text-emerald-700 border-emerald-300";
       case "Trung bình":
-        return "bg-blue-950/60 text-blue-300 border-blue-500/30";
+        return "bg-blue-50 text-blue-700 border-blue-300";
       case "Khó":
-        return "bg-amber-950/60 text-amber-300 border-amber-500/30";
+        return "bg-amber-50 text-amber-700 border-amber-300";
       case "Địa ngục":
-        return "bg-rose-950/60 text-rose-300 border-rose-500/30";
+        return "bg-rose-50 text-rose-700 border-rose-300";
       default:
-        return "bg-slate-800 text-slate-300 border-slate-700";
+        return "bg-slate-100 text-slate-600 border-slate-300";
     }
   };
 
   return (
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
-      <div className="rounded-2xl p-6 md:p-8 xianxia-card border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-2xl p-6 md:p-8 xianxia-card border border-blue-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2 text-amber-400 mb-1">
+          <div className="flex items-center space-x-2 text-blue-600 mb-1">
             <Scroll className="w-6 h-6" />
             <span className="text-xs font-semibold uppercase tracking-wider">Tông Môn Chấp Sự</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-500">
+          <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-700">
             Nhiệm Vụ Đường
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
             Hoàn thành các việc cần làm ngoài đời thực để nhận Tu Vi bồi dưỡng linh căn và Linh Thạch đổi quà.
           </p>
         </div>
 
         {cultivator && (
-          <div className="flex items-center space-x-4 bg-slate-900/80 border border-slate-700/60 rounded-xl px-4 py-3">
+          <div className="flex items-center space-x-4 bg-white/80 border border-slate-300/60 rounded-xl px-4 py-3">
             <div>
-              <p className="text-[10px] text-slate-400 uppercase">Cảnh Giới Hiện Tại</p>
-              <p className="text-sm font-bold text-amber-300">{cultivator.realm}</p>
+              <p className="text-[10px] text-slate-500 uppercase">Cảnh Giới Hiện Tại</p>
+              <p className="text-sm font-bold text-blue-700">{cultivator.realm}</p>
             </div>
-            <div className="h-8 w-[1px] bg-slate-700" />
+            <div className="h-8 w-[1px] bg-slate-300" />
             <div>
-              <p className="text-[10px] text-slate-400 uppercase">Linh Thạch</p>
-              <p className="text-sm font-bold text-emerald-400 flex items-center gap-1">
+              <p className="text-[10px] text-slate-500 uppercase">Linh Thạch</p>
+              <p className="text-sm font-bold text-emerald-700 flex items-center gap-1">
                 <Gem className="w-3.5 h-3.5" /> {cultivator.spiritStones}
               </p>
             </div>
@@ -193,21 +193,21 @@ export default function QuestsPage() {
         <div
           className={`p-4 rounded-xl text-sm flex items-center justify-between animate-fade-in ${
             feedback.type === "success"
-              ? "bg-amber-950/70 border border-amber-500/50 text-amber-200"
-              : "bg-rose-950/70 border border-rose-500/50 text-rose-200"
+              ? "bg-blue-50 border border-blue-400/60 text-blue-800"
+              : "bg-rose-50 border border-rose-400/60 text-rose-700"
           }`}
         >
           <div className="flex items-center space-x-2">
             {feedback.type === "success" ? (
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
             )}
             <p className="font-medium">{feedback.message}</p>
           </div>
           <button
             onClick={() => setFeedback(null)}
-            className="text-xs text-slate-400 hover:text-slate-200 ml-4"
+            className="text-xs text-slate-500 hover:text-slate-800 ml-4"
           >
             Đóng
           </button>
@@ -216,27 +216,27 @@ export default function QuestsPage() {
 
       {/* Daily Progress & Streak Widget */}
       {cultivator && dailyStats && (
-        <div className="rounded-3xl p-5 sm:p-6 xianxia-card border border-amber-500/30 bg-gradient-to-r from-slate-900 via-[#0d141d] to-[#121b26] shadow-xl space-y-4">
+        <div className="rounded-3xl p-5 sm:p-6 xianxia-card border border-blue-500/30 bg-gradient-to-r from-white via-blue-50/60 to-cyan-50/60 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/30 shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white font-black shadow-lg shadow-blue-600/30 shrink-0">
                 <Flame className="w-6 h-6 animate-pulse" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="font-bold text-slate-100 text-sm sm:text-base">
+                  <h3 className="font-bold text-slate-800 text-sm sm:text-base">
                     Chuỗi Tu Luyện:{" "}
-                    <span className="text-amber-300 font-extrabold font-mono">
+                    <span className="text-blue-700 font-extrabold font-mono">
                       {streakInfo?.streakCount || 0} Ngày
                     </span>
                   </h3>
                   {(streakInfo?.bonusPercent || 0) > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600/10 text-blue-700 border border-blue-500/40">
                       +{streakInfo?.bonusPercent}% Thưởng Ngày Mai
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {(streakInfo?.streakCount || 0) > 0
                     ? `Duy trì hoàn thành nhiệm vụ nhật thường mỗi ngày để tăng +1%/ngày (tối đa +30%)`
                     : `Hoàn thành 100% nhiệm vụ nhật thường hôm nay để bắt đầu chuỗi ngày và nhận +1% thưởng ngày mai!`}
@@ -245,12 +245,12 @@ export default function QuestsPage() {
             </div>
 
             <div className="text-left sm:text-right shrink-0">
-              <span className="text-[11px] text-slate-400 uppercase font-semibold block">
+              <span className="text-[11px] text-slate-500 uppercase font-semibold block">
                 Tiến Độ Nhật Thường Hôm Nay
               </span>
-              <span className="text-base sm:text-lg font-black text-amber-300 font-mono">
+              <span className="text-base sm:text-lg font-black text-blue-700 font-mono">
                 {dailyStats.completedDaily} / {dailyStats.totalDaily}{" "}
-                <span className="text-xs font-normal text-slate-400">
+                <span className="text-xs font-normal text-slate-500">
                   ({dailyStats.progressPercent}%)
                 </span>
               </span>
@@ -259,9 +259,9 @@ export default function QuestsPage() {
 
           {/* Progress Bar */}
           <div className="space-y-1.5">
-            <div className="h-3 w-full bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+            <div className="h-3 w-full bg-blue-50 rounded-full overflow-hidden p-0.5 border border-slate-200">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-300 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
+                className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(37,99,235,0.4)]"
                 style={{ width: `${dailyStats.progressPercent}%` }}
               />
             </div>
@@ -269,16 +269,16 @@ export default function QuestsPage() {
             {/* Notification message about remaining quests */}
             <div className="flex items-center justify-between text-xs pt-1">
               {dailyStats.remainingDaily > 0 ? (
-                <p className="text-amber-300/90 font-medium flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <p className="text-blue-700/90 font-medium flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                   <span>
                     Còn thiếu <strong>{dailyStats.remainingDaily}</strong> nhiệm vụ nhật thường để
                     hoàn thành tu luyện hôm nay!
                   </span>
                 </p>
               ) : (
-                <p className="text-emerald-400 font-bold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <p className="text-emerald-700 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>
                     🎉 Đạo hữu đã hoàn thành trọn vẹn toàn bộ nhiệm vụ nhật thường hôm nay! Chuỗi +1 ngày.
                   </span>
@@ -306,8 +306,8 @@ export default function QuestsPage() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === tab.id
-                ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                : "bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "bg-white/80 text-slate-500 hover:text-blue-700 border border-slate-200"
             }`}
           >
             {tab.label}
@@ -318,13 +318,13 @@ export default function QuestsPage() {
       {/* Quests Grid */}
       {loading ? (
         <div className="text-center py-16">
-          <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-xs text-slate-400">Đang kiểm tra lệnh bài nhiệm vụ...</p>
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-xs text-slate-500">Đang kiểm tra lệnh bài nhiệm vụ...</p>
         </div>
       ) : filteredQuests.length === 0 ? (
-        <div className="text-center py-16 xianxia-card rounded-2xl border border-slate-800 p-6 sm:p-8">
-          <Scroll className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-300">Không có nhiệm vụ trong mục này</h3>
+        <div className="text-center py-16 xianxia-card rounded-2xl border border-slate-200 p-6 sm:p-8">
+          <Scroll className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-slate-600">Không có nhiệm vụ trong mục này</h3>
           <p className="text-xs text-slate-500 mt-1">
             Chưởng môn nhân sẽ sớm ban hành các nhiệm vụ mới trên bảng!
           </p>
@@ -340,14 +340,14 @@ export default function QuestsPage() {
                 key={quest.id}
                 className={`rounded-2xl p-4 sm:p-5 border flex flex-col justify-between transition-all duration-200 ${
                   isCompleted
-                    ? "bg-slate-950/40 border-slate-800/80 opacity-60"
-                    : "xianxia-card border-amber-500/20 hover:border-amber-500/40"
+                    ? "bg-slate-100/70 border-slate-200/80 opacity-60"
+                    : "xianxia-card border-blue-500/20 hover:border-blue-500/40"
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center space-x-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-600/10 text-blue-700 border border-blue-500/30">
                         {quest.category === "DAILY"
                           ? "Nhật Thường"
                           : quest.category === "BREAKTHROUGH"
@@ -364,35 +364,35 @@ export default function QuestsPage() {
                     </div>
 
                     {quest.minRealmLevel > 0 && (
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-slate-500 font-mono">
                         Yêu cầu: Lv.{quest.minRealmLevel}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-sm sm:text-base font-bold text-slate-100 mt-2">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mt-2">
                     {quest.title}
                   </h3>
 
-                  <p className="text-xs text-slate-300/80 mt-1.5 leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                     {quest.description}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="mt-4 pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <span className="text-amber-400 font-bold flex items-center gap-1">
+                    <span className="text-blue-600 font-bold flex items-center gap-1">
                       <Zap className="w-3.5 h-3.5" /> +{quest.expReward}
                       {(quest.bonusExp || 0) > 0 && (
-                        <span className="text-amber-300 font-normal text-[10px]">
+                        <span className="text-blue-500 font-normal text-[10px]">
                           (+{quest.bonusExp} 🔥)
                         </span>
                       )} Tu Vi
                     </span>
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="text-emerald-600 font-bold flex items-center gap-1">
                       <Gem className="w-3.5 h-3.5" /> +{quest.stoneReward}
                       {(quest.bonusStones || 0) > 0 && (
-                        <span className="text-emerald-300 font-normal text-[10px]">
+                        <span className="text-emerald-600 font-normal text-[10px]">
                           (+{quest.bonusStones} 🔥)
                         </span>
                       )} Linh Thạch
@@ -401,17 +401,17 @@ export default function QuestsPage() {
 
                   <div className="w-full sm:w-auto">
                     {isCompleted ? (
-                      <div className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-3 py-2 sm:py-1.5 rounded-xl">
+                      <div className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-3 py-2 sm:py-1.5 rounded-xl">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Đã Hoàn Thành</span>
                       </div>
                     ) : quest.isPending ? (
-                      <div className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 text-xs font-bold text-amber-300 bg-amber-950/50 border border-amber-500/40 px-3 py-2 sm:py-1.5 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-pulse">
-                        <Clock className="w-4 h-4 text-amber-400" />
+                      <div className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-500/40 px-3 py-2 sm:py-1.5 rounded-xl shadow-[0_0_12px_rgba(37,99,235,0.15)] animate-pulse">
+                        <Clock className="w-4 h-4 text-blue-500" />
                         <span>Chờ Trưởng Lão Duyệt</span>
                       </div>
                     ) : !meetsRealm ? (
-                      <div className="text-xs text-rose-400/80 font-medium italic text-center sm:text-left py-1">
+                      <div className="text-xs text-rose-500/80 font-medium italic text-center sm:text-left py-1">
                         Cảnh giới chưa đủ
                       </div>
                     ) : (
@@ -419,8 +419,8 @@ export default function QuestsPage() {
                         onClick={() => openSubmitModal(quest)}
                         className={`w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 sm:py-1.5 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center ${
                           quest.isRejected
-                            ? "bg-rose-950/80 border border-rose-500/40 text-rose-300 hover:bg-rose-900"
-                            : "bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 hover:brightness-110 shadow-md shadow-amber-500/20"
+                            ? "bg-rose-50 border border-rose-300 text-rose-700 hover:bg-rose-100"
+                            : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:brightness-110 shadow-md shadow-blue-600/25"
                         }`}
                       >
                         {quest.isRejected ? "Nộp Lại Báo Cáo" : "Báo Cáo Hoàn Thành"}
@@ -436,30 +436,30 @@ export default function QuestsPage() {
 
       {/* Modal Nộp Báo Cáo Nhiệm Vụ */}
       {selectedQuest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="relative w-full max-w-sm sm:max-w-md p-5 sm:p-6 rounded-2xl bg-[#0e1622] border border-amber-500/30 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="relative w-full max-w-sm sm:max-w-md p-5 sm:p-6 rounded-2xl bg-white border border-blue-300/60 shadow-2xl">
             <div className="text-center mb-4">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-600">
                 <Scroll className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-amber-300">
+              <h3 className="text-lg font-bold text-blue-800">
                 Báo Cáo Hoàn Thành Nhiệm Vụ
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Gửi báo cáo lên Trưởng Lão để thẩm định và ban phát Tu Vi, Linh Thạch.
               </p>
             </div>
 
             {/* Quest Preview */}
-            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 mb-3">
-              <h4 className="font-bold text-slate-200 text-sm">{selectedQuest.title}</h4>
-              <p className="text-xs text-slate-400 mt-1">{selectedQuest.description}</p>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-2.5 pt-2 border-t border-slate-800 font-semibold">
-                <span className="text-amber-400">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3">
+              <h4 className="font-bold text-slate-800 text-sm">{selectedQuest.title}</h4>
+              <p className="text-xs text-slate-500 mt-1">{selectedQuest.description}</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-2.5 pt-2 border-t border-slate-200 font-semibold">
+                <span className="text-blue-600">
                   +{selectedQuest.expReward}
                   {(selectedQuest.bonusExp || 0) > 0 && ` (+${selectedQuest.bonusExp} 🔥)`} Tu Vi
                 </span>
-                <span className="text-emerald-400">
+                <span className="text-emerald-600">
                   +{selectedQuest.stoneReward}
                   {(selectedQuest.bonusStones || 0) > 0 && ` (+${selectedQuest.bonusStones} 🔥)`} Linh Thạch
                 </span>
@@ -467,16 +467,16 @@ export default function QuestsPage() {
             </div>
 
             {/* Facebook Proof Notice Box */}
-            <div className="p-3 rounded-xl bg-blue-950/50 border border-blue-500/40 text-blue-200 text-xs flex items-start space-x-2.5 mb-3.5 shadow-sm">
+            <div className="p-3 rounded-xl bg-blue-50 border border-blue-400/60 text-blue-800 text-xs flex items-start space-x-2.5 mb-3.5 shadow-sm">
               <span className="text-base shrink-0">📲</span>
               <p className="leading-relaxed">
-                <strong className="text-blue-300">Yêu cầu minh chứng:</strong> Đạo hữu vui lòng <strong>gửi ảnh / video minh chứng qua tin nhắn Facebook</strong> cho Trưởng Lão để được thẩm định và phê chuẩn!
+                <strong className="text-blue-700">Yêu cầu minh chứng:</strong> Đạo hữu vui lòng <strong>gửi ảnh / video minh chứng qua tin nhắn Facebook</strong> cho Trưởng Lão để được thẩm định và phê chuẩn!
               </p>
             </div>
 
             <form onSubmit={handleSubmitReport} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
                   Ghi chú báo cáo (Gửi minh chứng qua Facebook)
                 </label>
                 <textarea
@@ -484,7 +484,7 @@ export default function QuestsPage() {
                   placeholder="Ví dụ: Đã gửi ảnh / video minh chứng qua Facebook cho Trưởng Lão..."
                   value={reportNote}
                   onChange={(e) => setReportNote(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -492,14 +492,14 @@ export default function QuestsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedQuest(null)}
-                  className="flex-1 py-2.5 px-3 rounded-xl text-xs font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 active:scale-95 transition"
+                  className="flex-1 py-2.5 px-3 rounded-xl text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 active:scale-95 transition"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={submittingReport}
-                  className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50 transition"
+                  className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:brightness-110 shadow-md shadow-blue-600/25 active:scale-95 disabled:opacity-50 transition"
                 >
                   {submittingReport ? "Đang gửi..." : "Gửi Phê Duyệt"}
                 </button>
